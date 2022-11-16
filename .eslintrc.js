@@ -1,18 +1,18 @@
 {
-  "extends": ["eslint:recommended", "google"],
-  "parserOptions": {
-    "ecmaVersion": 8,
-    "sourceType": "module",
-    "ecmaFeatures": {
-      "jsx": true,
+  extends: ["eslint:recommended", "google"],
+  parserOptions: {
+    ecmaVersion: 8,
+    sourceType: "module",
+    ecmaFeatures: {
+      jsx: true,
     }
   },
-  "env": {
-    "node": true,
-    "es6": true,
-    "mocha": true,
+  env: {
+    node: true,
+    es6: true,
+    mocha: true,
   },
-  "rules": {
-    "prefer-promise-reject-errors": "off",
+  rules: {
+    prefer-promise-reject-errors: "off",
   }
 }
