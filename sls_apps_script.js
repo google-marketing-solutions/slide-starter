@@ -44,6 +44,8 @@
  * Slide Starter (Based on UX Starter V5 - Last edit 11/02/22)
  */
 
+import 'google-apps-script';
+
 // TODO: Move into configuration sheet.
 const COLUMN_WIDTH = [50, 50, 75, 250, 75, 180];
 const MAX_PAGE_HEIGHT = 175;
@@ -71,7 +73,7 @@ function createDeckFromRecommendations() {
   loadConfiguration();
   const documentProperties = PropertiesService.getDocumentProperties();
   documentProperties.setProperty('SLIDES_REQUESTS', JSON.stringify([]));
-  let newDeckId = createBaseDeck();
+  const newDeckId = createBaseDeck();
   const recommendationSlideLayout =
       getTemplateLayout(newDeckId, 'TABLE_LAYOUT_NAME');
   const headerSlideLayout = getTemplateLayout(newDeckId, 'HEADER_LAYOUT_NAME');
@@ -108,10 +110,10 @@ function createSlideSection(
   const spreadsheet = SpreadsheetApp.getActive().getSheetByName(sectionName);
   const startingRow = documentProperties.getProperty('STARTING_ROW');
   const values = spreadsheet
-                     .getRange(
-                         startingRow, 1, spreadsheet.getLastRow() - startingRow,
-                         spreadsheet.getLastColumn())
-                     .getValues();
+      .getRange(
+          startingRow, 1, spreadsheet.getLastRow() - startingRow,
+          spreadsheet.getLastColumn())
+      .getValues();
   if (values.length === 1) {
     return;
   }
@@ -266,7 +268,8 @@ function applyTextStyle(textRange, isHeader) {
  */
 function buildTableStyleSlidesRequest(tableId) {
   const documentProperties = PropertiesService.getDocumentProperties();
-  let requests = JSON.parse(documentProperties.getProperty('SLIDES_REQUESTS'));
+  const requests =
+      JSON.parse(documentProperties.getProperty('SLIDES_REQUESTS'));
 
   // TODO: Make column width dynamic from configuration sheet.
   for (let i = 0; i < COLUMN_WIDTH.length; i++) {
@@ -295,7 +298,7 @@ function buildTableStyleSlidesRequest(tableId) {
           columnIndex: 0,
         },
         rowSpan: 1,
-        columnSpan: 6
+        columnSpan: 6,
       },
       tableCellProperties: {
         tableCellBackgroundFill: {
@@ -343,3 +346,7 @@ function calculateCellRowHeight(lengthText, columnIndex, fontSize) {
   return Math.ceil(lengthText * fontSize / COLUMN_WIDTH[columnIndex]) *
       fontSize;
 }
+
+module.exports = {
+  createDeckFromRecommendations: createDeckFromRecommendations,
+};

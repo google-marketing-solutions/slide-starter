@@ -48,6 +48,7 @@ const ERROR_MISSING_PROPERTY =
     'There\'s a missing property from the configuration.';
 const ERROR_MISSING_RANGE = 'Couldn\'t find the named range in Configuration.';
 const ERROR_NO_SHAPE = 'There was a problem retrieving the shape layout.';
+const ERROR_NO_LAYOUT = 'There was a problem retrieving the layout.';
 
 // Properties configuration
 const NUM_PROPERTIES = 16;
@@ -116,10 +117,10 @@ function customDataInjection(newDeckId) {
 
 /**
  * Retrieves the template layout id from the presentation based on the template
- * name specified on the base template. As the API doesn't offer a direct way to do
- * this operation, it iterates over all of the existing layouts and it returns
- * the correct one once it has found a match. This function assumes that the
- * base template contains the layout name as specified on the constants.
+ * name specified on the base template. As the API doesn't offer a direct way to
+ * do this operation, it iterates over all of the existing layouts and it
+ * returns the correct one once it has found a match. This function assumes that
+ * the base template contains the layout name as specified on the constants.
  *
  * @param {string} presentationId Id of the new slide deck that has
  *     been generated
@@ -133,8 +134,7 @@ function getTemplateLayoutId(presentationId) {
       return layout.objectId;
     }
   }
-  throw new Error(
-      'There was a problem retrieving the slide layout, please check the configuration tab.');
+  throw new Error(ERROR_NO_LAYOUT);
 }
 
 /**
@@ -158,7 +158,7 @@ function getTemplateLayout(presentationId) {
 
 
 /**
- * Returns a Shape object from a slide layout based on a string match. Given API
+ * Returns a Shape object from a slide layout based on a string match.Given API
  * limitations, it must iterate over all existing shapes in the slide to
  * retrieve the desired one, then match based on the find function on its
  * enclosed TextRange.
@@ -176,3 +176,11 @@ function retrieveShape(slide, typeString) {
   }
   throw new Error(ERROR_NO_SHAPE);
 }
+
+module.exports = {
+  loadConfiguration: loadConfiguration,
+  createBaseDeck: createBaseDeck,
+  customDataInjection: customDataInjection,
+  getTemplateLayout: getTemplateLayout,
+  retrieveShape: retrieveShape,
+};
