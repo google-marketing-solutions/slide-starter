@@ -1,18 +1,15 @@
-{
-  extends: ["eslint:recommended", "google"],
-  parserOptions: {
-    ecmaVersion: 8,
-    sourceType: "module",
-    ecmaFeatures: {
-      jsx: true,
+module.exports = {
+    "extends": ["eslint:recommended", "google"],
+    "env": {
+        "browser": true,
+        "es2021": true
+    },
+    "overrides": [
+    ],
+    "parserOptions": {
+        "ecmaVersion": "latest",
+        "sourceType": "module"
+    },
+    "rules": {
     }
-  },
-  env: {
-    node: true,
-    es6: true,
-    mocha: true,
-  },
-  rules: {
-    prefer-promise-reject-errors: "off",
-  }
 }
