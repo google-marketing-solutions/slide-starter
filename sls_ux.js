@@ -6,10 +6,10 @@
  */
 
 // Error messages
-const ERROR_NO_SPREADSHEET = 'UX Starter must be attached to a spreadsheet.';
-const ERROR_NO_DECK = 'There was a problem opening the generated deck.';
-const ERROR_CREATING_IMAGES = 'There was a problem creating the image mockups.';
-const ERROR_MULTIPLE_FOLDERS = 'Please ensure there is only one folder named ';
+//const ERROR_NO_SPREADSHEET = 'UX Starter must be attached to a spreadsheet.';
+//const ERROR_NO_DECK = 'There was a problem opening the generated deck.';
+//const ERROR_CREATING_IMAGES = 'There was a problem creating the image mockups.';
+//const ERROR_MULTIPLE_FOLDERS = 'Please ensure there is only one folder named ';
 
 // Warning messages
 const WARNING_NO_IMAGES = 'No image found for criteria id ';
@@ -22,7 +22,7 @@ const NUM_PROPERTIES = 16;
  * custom menu to the spreadsheet.
  */
 function onOpen() {
-  loadConfiguration();
+  loadConfiguration(NUM_PROPERTIES);
   const spreadsheet = SpreadsheetApp.getActive();
   const menuItems = [
     {
@@ -197,3 +197,8 @@ function applyCustomStyle(newDeckId) {
   deck.appendSlide(endSlide, SlidesApp.SlideLinkingMode.NOT_LINKED);
 }
 
+module.exports = {
+  onOpen,
+  applyCustomStyle,
+  parseFieldsAndCreateSlide,
+}

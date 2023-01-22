@@ -7,7 +7,6 @@ const CWV = {
   FID: [100, 300],
   CLS: [0.1, 0.25],
 };
-const NUM_PROPERTIES = 16;
 
 /**
  * Parses the fields contained on the incoming row from the spreadsheet into
@@ -122,11 +121,15 @@ function createRecommendationSlideGAS(
  * being flattened as JSON.
  *
  * @param {string} tableId String that identifies the table to modify
+ * @param {string} rowIndex String that identifies the table to modify
+ * @param {string} columnIndex String that identifies the table to modify
+ * @param {string} color String that identifies the table to modify
  */
 function buildBackgroundCellColorTableStyleSlidesRequest(
     tableId, rowIndex, columnIndex, color) {
   const documentProperties = PropertiesService.getDocumentProperties();
-  const requests = JSON.parse(documentProperties.getProperty('SLIDES_REQUESTS'));
+  const requests =
+      JSON.parse(documentProperties.getProperty('SLIDES_REQUESTS'));
 
   requests.push({
     updateTableCellProperties: {
@@ -155,7 +158,12 @@ function buildBackgroundCellColorTableStyleSlidesRequest(
   documentProperties.setProperty('SLIDES_REQUESTS', JSON.stringify(requests));
 }
 
-
+/**
+ *
+ * @param {*} cwv
+ * @param {*} value
+ * @returns {*}
+ */
 function colorForCWV(cwv, value) {
   const lowThreshold = cwv[0];
   const highThreshold = cwv[1];
@@ -169,6 +177,11 @@ function colorForCWV(cwv, value) {
   }
 }
 
+/**
+ * Applies conditional coloring table to the CWV parameter table
+ *
+ * @param {string} deckId
+ */
 function colorCWVTable(deckId) {
   const documentProperties = PropertiesService.getDocumentProperties();
   const cwvSlideIndex = documentProperties.getProperty('CWV_SLIDE');
@@ -199,4 +212,10 @@ function colorCWVTable(deckId) {
     buildBackgroundCellColorTableStyleSlidesRequest(
         cwvTable.getObjectId(), i, 4, color);
   }
+}
+
+module.exports = {
+  onOpen,
+  applyCustomStyle,
+  parseFieldsAndCreateSlide,
 }

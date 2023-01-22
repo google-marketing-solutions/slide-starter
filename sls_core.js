@@ -35,6 +35,7 @@ const ERROR_NO_SHAPE = 'There was a problem retrieving the shape layout.';
 
 // Properties configuration
 const RANGE_NAME = 'Configuration!PROPERTIES';
+const NUM_PROPERTIES = 16;
 
 // Document properties
 const documentProperties = PropertiesService.getDocumentProperties();
@@ -44,13 +45,13 @@ const documentProperties = PropertiesService.getDocumentProperties();
  * active spreadsheet and maps them to the document properties using
  * the properties service.
  */
-function loadConfiguration() {
+function loadConfiguration(properties = NUM_PROPERTIES) {
   const range = SpreadsheetApp.getActive().getRangeByName(RANGE_NAME);
   if (!range) {
     throw new Error(ERROR_MISSING_RANGE);
   }
   const values = range.getValues();
-  if (values.length < NUM_PROPERTIES) {
+  if (values.length < properties) {
     throw new Error(ERROR_MISSING_PROPERTY);
   }
   for (const value of values) {
