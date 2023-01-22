@@ -84,7 +84,7 @@ function parseFieldsAndCreateSlide(
                                               row[criteriaImageMockupIndex]);
   const insights = row[criteriaInsightSlidesIndex].split(',');
   const folder = DriveApp.getFileById(SpreadsheetApp.getActive().getId())
-    .getParents().next();
+      .getParents().next();
   const clientImage = retrieveClientImage(folder, criteriaId);
   createRecommendationSlideGAS(
       deck, recommendationSlideLayout, criteria, applicable, description,

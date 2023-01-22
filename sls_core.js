@@ -123,8 +123,8 @@ function getTemplateLayoutId(presentationId) {
       return layout.objectId;
     }
   }
-  throw new Error(
-      'There was a problem retrieving the slide layout, please check the configuration tab.');
+  throw new Error(`There was a problem retrieving the slide layout, 
+  please check the configuration tab.`);
 }
 
 /**
@@ -174,11 +174,11 @@ function retrieveShape(slide, typeString) {
  * @param {!Array<string>} insights Array of slide ids for extended insights
  */
 function appendInsightSlides(deck, insightDeck, insights) {
-  for (let insightSlideId of insights) {
+  for (const insightSlideId of insights) {
     if (insightSlideId === '') {
       continue;
     }
-    let insightSlide = insightDeck.getSlideById(insightSlideId.trim());
+    const insightSlide = insightDeck.getSlideById(insightSlideId.trim());
     if (insightSlide === null) {
       continue;
     }
@@ -206,6 +206,11 @@ function filterAndSortRecommendations() {
 
   if (previousFilter !== null) {
     previousFilter.remove();
+  }
+
+  let sortingOrder = false;
+  if (documentProperties.getProperty('SORTING_ORDER')) {
+    sortingOrder = documentProperties.getProperty('SORTING_ORDER');
   }
 
   const filter = sheet.getRange(1, 1, lastRow, lastColumn).createFilter();
