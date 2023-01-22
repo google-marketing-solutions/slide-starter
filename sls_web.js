@@ -162,7 +162,7 @@ function buildBackgroundCellColorTableStyleSlidesRequest(
  *
  * @param {*} cwv
  * @param {*} value
- * @returns {*}
+ * @return {*}
  */
 function colorForCWV(cwv, value) {
   const lowThreshold = cwv[0];

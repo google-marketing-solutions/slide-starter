@@ -6,10 +6,11 @@
  */
 
 // Error messages
-//const ERROR_NO_SPREADSHEET = 'UX Starter must be attached to a spreadsheet.';
-//const ERROR_NO_DECK = 'There was a problem opening the generated deck.';
-//const ERROR_CREATING_IMAGES = 'There was a problem creating the image mockups.';
-//const ERROR_MULTIPLE_FOLDERS = 'Please ensure there is only one folder named ';
+// const ERROR_NO_SPREADSHEET = 'UX Starter must be attached to a spreadsheet.'
+// const ERROR_NO_DECK = 'There was a problem opening the generated deck.';
+// const ERROR_CREATING_IMAGES = 'There was a problem creating the image
+// mockups.'; const ERROR_MULTIPLE_FOLDERS = 'Please ensure there is only one
+// folder named ';
 
 // Warning messages
 const WARNING_NO_IMAGES = 'No image found for criteria id ';
@@ -99,7 +100,8 @@ function parseFieldsAndCreateSlide(
  * In case there are insight slide ids in the insights array, it will
  * instantiate those slides and append them to the created slide
  *
- * @param {!Presentation} deck Id of the generated deck that will contain the recos
+ * @param {!Presentation} deck Id of the generated deck that will contain the
+ *     recos
  * @param {!Layout} recommendationSlideLayout The template layout
  * @param {string} criteria The name of the criteria used as title
  * @param {string} applicable A list of pages where this criteria is applicable
@@ -201,4 +203,4 @@ module.exports = {
   onOpen,
   applyCustomStyle,
   parseFieldsAndCreateSlide,
-}
+};
