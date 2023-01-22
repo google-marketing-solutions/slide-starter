@@ -44,8 +44,8 @@ const documentProperties = PropertiesService.getDocumentProperties();
  * Loads the configuration properties based on a named range defined on the
  * active spreadsheet and maps them to the document properties using
  * the properties service.
- * 
-* @param {number} properties Number of properties to be expected
+ *
+ * @param {number} properties Number of properties to be expected
  */
 function loadConfiguration(properties = NUM_PROPERTIES) {
   const range = SpreadsheetApp.getActive().getRangeByName(RANGE_NAME);
@@ -122,8 +122,7 @@ function getTemplateLayoutId(presentationId) {
       return layout.objectId;
     }
   }
-  throw new Error(
-      'There was a problem retrieving the slide layout.');
+  throw new Error('There was a problem retrieving the slide layout.');
 }
 
 /**
@@ -255,8 +254,8 @@ function createDeckFromRecommendations() {
 }
 
 module.exports = {
-  loadConfiguration: loadConfiguration,
-  retrieveShape: retrieveShape,
-  appendInsightSlides: appendInsightSlides,
-  createDeckFromRecommendations: createDeckFromRecommendations,
+  loadConfiguration : loadConfiguration,
+  retrieveShape : retrieveShape,
+  appendInsightSlides : appendInsightSlides,
+  createDeckFromRecommendations : createDeckFromRecommendations,
 };
