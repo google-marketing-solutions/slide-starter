@@ -218,4 +218,4 @@ module.exports = {
   onOpen,
   applyCustomStyle,
   parseFieldsAndCreateSlide,
-}
+};

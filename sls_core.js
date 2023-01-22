@@ -44,6 +44,8 @@ const documentProperties = PropertiesService.getDocumentProperties();
  * Loads the configuration properties based on a named range defined on the
  * active spreadsheet and maps them to the document properties using
  * the properties service.
+ * 
+* @param {number} properties Number of properties to be expected
  */
 function loadConfiguration(properties = NUM_PROPERTIES) {
   const range = SpreadsheetApp.getActive().getRangeByName(RANGE_NAME);
