@@ -2,7 +2,7 @@
  * Google AppScript File
  * @fileoverview Script used in the UX Starter project to automate UX audits.
  *
- * UX Starter V6
+ * UX Starter V7 - 22/01/23
  */
 
 // Error messages
@@ -83,7 +83,8 @@ function parseFieldsAndCreateSlide(
       (row[criteriaImageMockupIndex] === '' ? criteriaDefaultImageUrl :
                                               row[criteriaImageMockupIndex]);
   const insights = row[criteriaInsightSlidesIndex].split(',');
-
+  const folder = DriveApp.getFileById(SpreadsheetApp.getActive().getId())
+    .getParents().next();
   const clientImage = retrieveClientImage(folder, criteriaId);
   createRecommendationSlideGAS(
       deck, recommendationSlideLayout, criteria, applicable, description,
