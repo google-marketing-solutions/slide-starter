@@ -254,8 +254,8 @@ function createDeckFromRecommendations() {
 }
 
 module.exports = {
-  loadConfiguration : loadConfiguration,
-  retrieveShape : retrieveShape,
-  appendInsightSlides : appendInsightSlides,
-  createDeckFromRecommendations : createDeckFromRecommendations,
+  loadConfiguration: loadConfiguration,
+  retrieveShape: retrieveShape,
+  appendInsightSlides: appendInsightSlides,
+  createDeckFromRecommendations: createDeckFromRecommendations,
 };
