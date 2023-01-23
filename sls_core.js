@@ -217,7 +217,7 @@ function filterAndSortRecommendations() {
   const failingFilterCriteria =
       SpreadsheetApp.newFilterCriteria().whenTextContains(
           documentProperties.getProperty('FAILING_CRITERIA_TEXT'));
-  filter.sort(documentProperties.getProperty('SORTING_ROW'), false)
+  filter.sort(documentProperties.getProperty('SORTING_ROW'), sortingOrder)
       .setColumnFilterCriteria(
           documentProperties.getProperty('FAILED_ROW'), failingFilterCriteria);
 }
