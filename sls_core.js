@@ -210,7 +210,7 @@ function filterAndSortRecommendations() {
 
   let sortingOrder = false;
   if (documentProperties.getProperty('SORTING_ORDER')) {
-    sortingOrder = documentProperties.getProperty('SORTING_ORDER');
+    sortingOrder = Boolean(documentProperties.getProperty('SORTING_ORDER'));
   }
 
   const filter = sheet.getRange(1, 1, lastRow, lastColumn).createFilter();
