@@ -1,3 +1,6 @@
+/* exported retrieveShape */
+/* exported appendInsightSlides */
+/* exported createDeckFromRecommendations */
 /**
  * Google AppScript File
  * @fileoverview Includes the core shared functions between the different
@@ -261,9 +264,3 @@ function createDeckFromRecommendations() {
   applyCustomStyle(newDeckId);
 }
 
-module.exports = {
-  loadConfiguration: loadConfiguration,
-  retrieveShape: retrieveShape,
-  appendInsightSlides: appendInsightSlides,
-  createDeckFromRecommendations: createDeckFromRecommendations,
-};
