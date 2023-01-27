@@ -111,7 +111,7 @@ function createRecommendationSlideGAS(
       .insertTextBox(
           learnMore, learnMoreShape.getLeft(), learnMoreShape.getTop(),
           learnMoreShape.getWidth(), learnMoreShape.getHeight())
-          .getText().getTextStyle().setLinkUrl(learnMore);
+      .getText().getTextStyle().setLinkUrl(learnMore);
 }
 
 /**
