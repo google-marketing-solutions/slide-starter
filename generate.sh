@@ -24,12 +24,12 @@ function copy_files () {
   cp "../sls_core.js" "sls_core.js"
   cp "../sls_$audit_type.js" "sls_$audit_type.js"
 
-  echo "Files successfully copied to clasp_uploads folder"
+  echo "Files successfully copied to output folder"
 }
 
-# Create the clasp_uploads folder if it doesn't already exist
-if [ ! -d "clasp_uploads" ]; then
-  mkdir clasp_uploads
+# Create the output folder if it doesn't already exist
+if [ ! -d "output" ]; then
+  mkdir output
 fi
 
 # Check if the user wants to upload to clasp
@@ -39,16 +39,16 @@ if [[ "$clasp_upload" == "--clasp-upload" ]]; then
     echo "Error: Script ID or URL not present"
     exit 1
   fi
-  cd clasp_uploads
+  cd output
   clasp clone "$clasp_script_url"
   copy_files
   clasp push
   echo "Clasp project updated"
   cd ..
-  rm -r clasp_uploads
+  rm -r output
   exit 1
 fi
 
-# Otherwise, only generate the files in clasp_uploads folder
-cd clasp_uploads
+# Otherwise, only generate the files in output folder
+cd output
 copy_files
