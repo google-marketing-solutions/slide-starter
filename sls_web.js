@@ -2,6 +2,10 @@
  * @fileoverview Description of this file.
  */
 
+/* exported applyCustomStyle */
+/* exported onOpen */
+/* exported parseFieldsAndCreateSlide */
+
 const CWV = {
   LCP: [2500, 4000],
   FID: [100, 300],
@@ -214,8 +218,3 @@ function colorCWVTable(deckId) {
   }
 }
 
-module.exports = {
-  onOpen,
-  applyCustomStyle,
-  parseFieldsAndCreateSlide,
-};

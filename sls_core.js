@@ -1,3 +1,6 @@
+/* exported retrieveShape */
+/* exported appendInsightSlides */
+/* exported createDeckFromRecommendations */
 /**
  * Google AppScript File
  * @fileoverview Includes the core shared functions between the different
@@ -25,6 +28,7 @@
  *   Helper function to retrieve a specific shape within a slide deck based on
  *   a string
  *
+ * 22/01/23
  */
 
 // Error messages
@@ -122,7 +126,8 @@ function getTemplateLayoutId(presentationId) {
       return layout.objectId;
     }
   }
-  throw new Error('There was a problem retrieving the slide layout.');
+  throw new Error(`There was a problem retrieving the slide layout, 
+  please check the configuration tab.`);
 }
 
 /**
@@ -206,11 +211,16 @@ function filterAndSortRecommendations() {
     previousFilter.remove();
   }
 
+  let sortingOrder = false;
+  if (documentProperties.getProperty('SORTING_ORDER')) {
+    sortingOrder = Boolean(documentProperties.getProperty('SORTING_ORDER'));
+  }
+
   const filter = sheet.getRange(1, 1, lastRow, lastColumn).createFilter();
   const failingFilterCriteria =
       SpreadsheetApp.newFilterCriteria().whenTextContains(
           documentProperties.getProperty('FAILING_CRITERIA_TEXT'));
-  filter.sort(documentProperties.getProperty('SORTING_ROW'), false)
+  filter.sort(documentProperties.getProperty('SORTING_ROW'), sortingOrder)
       .setColumnFilterCriteria(
           documentProperties.getProperty('FAILED_ROW'), failingFilterCriteria);
 }
@@ -223,6 +233,7 @@ function filterAndSortRecommendations() {
  * excluding the header row.
  */
 function createDeckFromRecommendations() {
+  loadConfiguration();
   filterAndSortRecommendations();
   const documentProperties = PropertiesService.getDocumentProperties();
   const spreadsheet = SpreadsheetApp.getActive().getSheetByName(
@@ -253,9 +264,3 @@ function createDeckFromRecommendations() {
   applyCustomStyle(newDeckId);
 }
 
-module.exports = {
-  loadConfiguration: loadConfiguration,
-  retrieveShape: retrieveShape,
-  appendInsightSlides: appendInsightSlides,
-  createDeckFromRecommendations: createDeckFromRecommendations,
-};

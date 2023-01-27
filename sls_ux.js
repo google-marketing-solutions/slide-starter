@@ -2,7 +2,7 @@
  * Google AppScript File
  * @fileoverview Script used in the UX Starter project to automate UX audits.
  *
- * UX Starter V6
+ * UX Starter V7 - 22/01/23
  */
 
 // Error messages
@@ -17,6 +17,10 @@ const WARNING_NO_IMAGES = 'No image found for criteria id ';
 const WARNING_MULTIPLE_IMAGES = 'No image found for criteria id ';
 
 const NUM_PROPERTIES = 16;
+
+/* exported applyCustomStyle */
+/* exported onOpen */
+/* exported parseFieldsAndCreateSlide */
 
 /**
  * A special function that runs when the spreadsheet is open, used to add a
@@ -83,7 +87,8 @@ function parseFieldsAndCreateSlide(
       (row[criteriaImageMockupIndex] === '' ? criteriaDefaultImageUrl :
                                               row[criteriaImageMockupIndex]);
   const insights = row[criteriaInsightSlidesIndex].split(',');
-
+  const folder = DriveApp.getFileById(SpreadsheetApp.getActive().getId())
+      .getParents().next();
   const clientImage = retrieveClientImage(folder, criteriaId);
   createRecommendationSlideGAS(
       deck, recommendationSlideLayout, criteria, applicable, description,
@@ -199,8 +204,3 @@ function applyCustomStyle(newDeckId) {
   deck.appendSlide(endSlide, SlidesApp.SlideLinkingMode.NOT_LINKED);
 }
 
-module.exports = {
-  onOpen,
-  applyCustomStyle,
-  parseFieldsAndCreateSlide,
-};

@@ -1,3 +1,4 @@
+/* exported createDeckFromRecommendations */
 /**
   Copyright 2022 Google LLC
 
@@ -43,8 +44,6 @@
  *
  * Slide Starter (Based on UX Starter V5 - Last edit 11/02/22)
  */
-
-import 'google-apps-script';
 
 // TODO: Move into configuration sheet.
 const COLUMN_WIDTH = [50, 50, 75, 250, 75, 180];
@@ -346,7 +345,3 @@ function calculateCellRowHeight(lengthText, columnIndex, fontSize) {
   return Math.ceil(lengthText * fontSize / COLUMN_WIDTH[columnIndex]) *
       fontSize;
 }
-
-module.exports = {
-  createDeckFromRecommendations: createDeckFromRecommendations,
-};
