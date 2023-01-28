@@ -81,7 +81,7 @@ function createBaseDeck() {
   const templateDeck =
       DriveApp.getFileById(documentProperties.getProperty('TEMPLATE_DECK_ID'));
   return templateDeck
-      .makeCopy(documentProperties.getProperty('OUTPUT_OUTPUT_DECK_NAME'), parentFolder)
+      .makeCopy(documentProperties.getProperty('OUTPUT_DECK_NAME'), parentFolder)
       .getId();
 }
 
