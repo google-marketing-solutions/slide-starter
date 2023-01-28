@@ -36,11 +36,11 @@ function onOpen() {
     },
     {
       name: 'Filter criteria only',
-      functionName: 'filterAndSortRecommendations',
+      functionName: 'filterAndSortData',
     },
     {
       name: 'Filter criteria and generate deck',
-      functionName: 'createDeckFromRecommendations',
+      functionName: 'createDeckFromDatasource',
     },
   ];
   spreadsheet.addMenu('UX Starter', menuItems);

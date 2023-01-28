@@ -1,4 +1,4 @@
-/* exported createDeckFromRecommendations */
+/* exported createDeckFromDatasource */
 /**
   Copyright 2022 Google LLC
 
@@ -68,7 +68,7 @@ const ROW_HEIGHT = 20;
  * process to retrieve them is computationally intensive, it's done at this
  * level to avoid repeating that operation.
  */
-function createDeckFromRecommendations() {
+function createDeckFromDatasource() {
   loadConfiguration();
   const documentProperties = PropertiesService.getDocumentProperties();
   documentProperties.setProperty('SLIDES_REQUESTS', JSON.stringify([]));

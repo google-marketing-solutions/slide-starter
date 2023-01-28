@@ -1,6 +1,6 @@
 /* exported retrieveShape */
 /* exported appendInsightSlides */
-/* exported createDeckFromRecommendations */
+/* exported createDeckFromDatasource */
 /**
  * Google AppScript File
  * @fileoverview Includes the core shared functions between the different
@@ -196,7 +196,7 @@ function appendInsightSlides(deck, insightDeck, insights) {
  * applies new filter based on criteria, and sorts by a specified column in the
  * trix.
  */
-function filterAndSortRecommendations() {
+function filterAndSortData() {
   SpreadsheetApp.getActiveSpreadsheet().toast('Filtering and sorting');
   const documentProperties = PropertiesService.getDocumentProperties();
   const sheet = SpreadsheetApp.getActive().getSheetByName(
@@ -231,9 +231,9 @@ function filterAndSortRecommendations() {
  * a slide operation request for each row that wasn't hidden by the filter
  * excluding the header row.
  */
-function createDeckFromRecommendations() {
+function createDeckFromDatasource() {
   loadConfiguration();
-  filterAndSortRecommendations();
+  filterAndSortData();
   const documentProperties = PropertiesService.getDocumentProperties();
   const spreadsheet = SpreadsheetApp.getActive().getSheetByName(
       documentProperties.getProperty('DATA_SOURCE_SHEET'));
