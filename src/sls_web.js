@@ -26,17 +26,17 @@ const CWV = {
 function parseFieldsAndCreateSlide(
     deck, insightDeck, recommendationSlideLayout, row) {
   const criteriaNameIndex =
-      documentProperties.getProperty('RECOMMENDATIONS_CRITERIA_NAME_ROW') - 1;
+      documentProperties.getProperty('TITLE_COLUMN') - 1;
   const criteriaAppliesIndex =
-      documentProperties.getProperty('RECOMMENDATIONS_APPLIES_ROW') - 1;
+      documentProperties.getProperty('SUBTITLE_COLUMN') - 1;
   const criteriaProblemStatementIndex =
-      documentProperties.getProperty('RECOMMENDATIONS_PROBLEM_STATEMENT_ROW') -
+      documentProperties.getProperty('UX_RECOMMENDATIONS_PROBLEM_STATEMENT_ROW') -
       1;
   const criteriaSolutionStatementIndex =
-      documentProperties.getProperty('RECOMMENDATIONS_SOLUTION_STATEMENT_ROW') -
+      documentProperties.getProperty('UX_RECOMMENDATIONS_SOLUTION_STATEMENT_ROW') -
       1;
   const criteriaInsightSlidesIndex =
-      documentProperties.getProperty('RECOMMENDATIONS_INSIGHTS_ROW') - 1;
+      documentProperties.getProperty('INSIGHT_SLIDE_ID_COLUMN') - 1;
 
   const criteria = row[criteriaNameIndex];
   const applicable =

@@ -78,7 +78,7 @@ function createDeckFromRecommendations() {
   const headerSlideLayout = getTemplateLayout(newDeckId, 'HEADER_LAYOUT_NAME');
 
   const auditSheets =
-      documentProperties.getProperty('RECOMMENDATIONS_SHEET_NAME').split(',');
+      documentProperties.getProperty('DATA_SOURCE_SHEET').split(',');
 
   for (const sheetName of auditSheets) {
     createSlideSection(

@@ -6,7 +6,6 @@
  * @fileoverview Includes the core shared functions between the different
  * implementations of Slide Starter for the procedural generation of slide
  * decks.
- *
  * - loadConfiguration
  *   Populates Document Properties with the parameters retrieved from the
  *   configuration sheet on the trix
@@ -28,7 +27,7 @@
  *   Helper function to retrieve a specific shape within a slide deck based on
  *   a string
  *
- * 22/01/23
+ * 27/01/23
  */
 
 // Error messages
@@ -82,7 +81,7 @@ function createBaseDeck() {
   const templateDeck =
       DriveApp.getFileById(documentProperties.getProperty('TEMPLATE_DECK_ID'));
   return templateDeck
-      .makeCopy(documentProperties.getProperty('DECK_NAME'), parentFolder)
+      .makeCopy(documentProperties.getProperty('OUTPUT_OUTPUT_DECK_NAME'), parentFolder)
       .getId();
 }
 
@@ -201,7 +200,7 @@ function filterAndSortRecommendations() {
   SpreadsheetApp.getActiveSpreadsheet().toast('Filtering and sorting');
   const documentProperties = PropertiesService.getDocumentProperties();
   const sheet = SpreadsheetApp.getActive().getSheetByName(
-      documentProperties.getProperty('RECOMMENDATIONS_SHEET_NAME'));
+      documentProperties.getProperty('DATA_SOURCE_SHEET'));
 
   const lastRow = sheet.getLastRow();
   const lastColumn = sheet.getLastColumn();
@@ -219,10 +218,10 @@ function filterAndSortRecommendations() {
   const filter = sheet.getRange(1, 1, lastRow, lastColumn).createFilter();
   const failingFilterCriteria =
       SpreadsheetApp.newFilterCriteria().whenTextContains(
-          documentProperties.getProperty('FAILING_CRITERIA_TEXT'));
-  filter.sort(documentProperties.getProperty('SORTING_ROW'), sortingOrder)
+          documentProperties.getProperty('FILTER_TEXT_VALUE'));
+  filter.sort(documentProperties.getProperty('SORTING_COLUMN'), sortingOrder)
       .setColumnFilterCriteria(
-          documentProperties.getProperty('FAILED_ROW'), failingFilterCriteria);
+          documentProperties.getProperty('FILTER_COLUMN'), failingFilterCriteria);
 }
 
 /**
@@ -237,7 +236,7 @@ function createDeckFromRecommendations() {
   filterAndSortRecommendations();
   const documentProperties = PropertiesService.getDocumentProperties();
   const spreadsheet = SpreadsheetApp.getActive().getSheetByName(
-      documentProperties.getProperty('RECOMMENDATIONS_SHEET_NAME'));
+      documentProperties.getProperty('DATA_SOURCE_SHEET'));
   const values = spreadsheet.getFilter().getRange().getValues();
 
   // TODO: Check if there are no sorted recommendations as part of that, and
