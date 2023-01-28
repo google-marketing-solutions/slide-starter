@@ -30,11 +30,11 @@ function parseFieldsAndCreateSlide(
   const criteriaAppliesIndex =
       documentProperties.getProperty('SUBTITLE_COLUMN') - 1;
   const criteriaProblemStatementIndex =
-      documentProperties.getProperty('WEB_RECOMMENDATIONS_PROBLEM_STATEMENT_ROW') -
-      1;
+      documentProperties
+          .getProperty('WEB_RECOMMENDATIONS_PROBLEM_STATEMENT_ROW') - 1;
   const criteriaSolutionStatementIndex =
-      documentProperties.getProperty('WEB_RECOMMENDATIONS_SOLUTION_STATEMENT_ROW') -
-      1;
+      documentProperties
+          .getProperty('WEB_RECOMMENDATIONS_SOLUTION_STATEMENT_ROW') - 1;
   const criteriaInsightSlidesIndex =
       documentProperties.getProperty('INSIGHT_SLIDE_ID_COLUMN') - 1;
 

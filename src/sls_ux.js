@@ -65,11 +65,11 @@ function parseFieldsAndCreateSlide(
   const criteriaAppliesIndex =
       documentProperties.getProperty('SUBTITLE_COLUMN') - 1;
   const criteriaProblemStatementIndex =
-      documentProperties.getProperty('UX_RECOMMENDATIONS_PROBLEM_STATEMENT_ROW') -
-      1;
+      documentProperties
+          .getProperty('UX_RECOMMENDATIONS_PROBLEM_STATEMENT_ROW') - 1;
   const criteriaSolutionStatementIndex =
-      documentProperties.getProperty('UX_RECOMMENDATIONS_SOLUTION_STATEMENT_ROW') -
-      1;
+      documentProperties
+          .getProperty('UX_RECOMMENDATIONS_SOLUTION_STATEMENT_ROW') - 1;
   const criteriaImageMockupIndex =
       documentProperties.getProperty('UX_IMAGE_MOCKUP_COLUMN') - 1;
   const criteriaDefaultImageUrl =

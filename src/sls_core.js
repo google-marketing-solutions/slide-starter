@@ -81,7 +81,8 @@ function createBaseDeck() {
   const templateDeck =
       DriveApp.getFileById(documentProperties.getProperty('TEMPLATE_DECK_ID'));
   return templateDeck
-      .makeCopy(documentProperties.getProperty('OUTPUT_DECK_NAME'), parentFolder)
+      .makeCopy(
+          documentProperties.getProperty('OUTPUT_DECK_NAME'), parentFolder)
       .getId();
 }
 
@@ -221,7 +222,8 @@ function filterAndSortData() {
           documentProperties.getProperty('FILTER_TEXT_VALUE'));
   filter.sort(documentProperties.getProperty('SORTING_COLUMN'), sortingOrder)
       .setColumnFilterCriteria(
-          documentProperties.getProperty('FILTER_COLUMN'), failingFilterCriteria);
+          documentProperties.getProperty('FILTER_COLUMN'),
+          failingFilterCriteria);
 }
 
 /**
