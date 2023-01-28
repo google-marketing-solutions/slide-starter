@@ -110,12 +110,11 @@ function createRecommendationSlideGAS(
   bodyRange.setText(description);
 
   const learnMoreShape = retrieveShape(slide, 'learn_more');
-  learnMoreShape.setLinkUrl(learnMore);
   slide
       .insertTextBox(
           learnMore, learnMoreShape.getLeft(), learnMoreShape.getTop(),
           learnMoreShape.getWidth(), learnMoreShape.getHeight())
-      .setLinkUrl(learnMore);
+      .getText().getTextStyle().setLinkUrl(learnMore);
 }
 
 /**
