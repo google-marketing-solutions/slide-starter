@@ -11,7 +11,7 @@
  * custom menu to the spreadsheet.
  */
 function onOpen() {
-  try{
+  try {
     loadConfiguration();
     const spreadsheet = SpreadsheetApp.getActive();
     const menuItems = [
@@ -30,7 +30,7 @@ function onOpen() {
     ];
     spreadsheet.addMenu('Performance Starter', menuItems);
   } catch (error) {
-    throw new Error('onOpen failed: ' + error.toString())
+    throw new Error('onOpen failed: ' + error.toString());
   }
 }
 
