@@ -6,6 +6,34 @@
 /* exported onOpen */
 /* exported parseFieldsAndCreateSlide */
 
+/**
+ * A special function that runs when the spreadsheet is open, used to add a
+ * custom menu to the spreadsheet.
+ */
+function onOpen() {
+  try{
+    loadConfiguration();
+    const spreadsheet = SpreadsheetApp.getActive();
+    const menuItems = [
+      {
+        name: 'Generate starter slide deck',
+        functionName: 'createDeckFromDatasource',
+      },
+      {
+        name: 'Load configuration',
+        functionName: 'loadConfiguration',
+      },
+      {
+        name: 'Filter criteria only',
+        functionName: 'filterAndSortData',
+      },
+    ];
+    spreadsheet.addMenu('Performance Starter', menuItems);
+  } catch (error) {
+    throw new Error('onOpen failed: ' + error.toString())
+  }
+}
+
 const CWV = {
   LCP: [2500, 4000],
   FID: [100, 300],
