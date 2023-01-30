@@ -2,7 +2,7 @@
  * Google AppScript File
  * @fileoverview Script used in the UX Starter project to automate UX audits.
  *
- * UX Starter V7 - 22/01/23
+ * UX Starter V7 - 27/01/23
  */
 
 // Error messages
@@ -16,7 +16,7 @@
 const WARNING_NO_IMAGES = 'No image found for criteria id ';
 const WARNING_MULTIPLE_IMAGES = 'No image found for criteria id ';
 
-const NUM_PROPERTIES = 16;
+const NUM_PROPERTIES_UX = 16;
 
 /* exported applyCustomStyle */
 /* exported onOpen */
@@ -27,7 +27,7 @@ const NUM_PROPERTIES = 16;
  * custom menu to the spreadsheet.
  */
 function onOpen() {
-  loadConfiguration(NUM_PROPERTIES);
+  loadConfiguration(NUM_PROPERTIES_UX);
   const spreadsheet = SpreadsheetApp.getActive();
   const menuItems = [
     {
@@ -36,11 +36,11 @@ function onOpen() {
     },
     {
       name: 'Filter criteria only',
-      functionName: 'filterAndSortRecommendations',
+      functionName: 'filterAndSortData',
     },
     {
       name: 'Filter criteria and generate deck',
-      functionName: 'createDeckFromRecommendations',
+      functionName: 'createDeckFromDatasource',
     },
   ];
   spreadsheet.addMenu('UX Starter', menuItems);
@@ -59,23 +59,23 @@ function onOpen() {
 function parseFieldsAndCreateSlide(
     deck, insightDeck, recommendationSlideLayout, row) {
   const criteriaIdIndex =
-      documentProperties.getProperty('RECOMMENDATIONS_CRITERIA_ID_ROW') - 1;
+      documentProperties.getProperty('UX_CRITERIA_ID_COLUMN') - 1;
   const criteriaNameIndex =
-      documentProperties.getProperty('RECOMMENDATIONS_CRITERIA_NAME_ROW') - 1;
+      documentProperties.getProperty('TITLE_COLUMN') - 1;
   const criteriaAppliesIndex =
-      documentProperties.getProperty('RECOMMENDATIONS_APPLIES_ROW') - 1;
+      documentProperties.getProperty('SUBTITLE_COLUMN') - 1;
   const criteriaProblemStatementIndex =
-      documentProperties.getProperty('RECOMMENDATIONS_PROBLEM_STATEMENT_ROW') -
-      1;
+      documentProperties
+          .getProperty('UX_RECOMMENDATIONS_PROBLEM_STATEMENT_ROW') - 1;
   const criteriaSolutionStatementIndex =
-      documentProperties.getProperty('RECOMMENDATIONS_SOLUTION_STATEMENT_ROW') -
-      1;
+      documentProperties
+          .getProperty('UX_RECOMMENDATIONS_SOLUTION_STATEMENT_ROW') - 1;
   const criteriaImageMockupIndex =
-      documentProperties.getProperty('RECOMMENDATIONS_IMAGE_MOCKUP_ROW') - 1;
+      documentProperties.getProperty('UX_IMAGE_MOCKUP_COLUMN') - 1;
   const criteriaDefaultImageUrl =
-      documentProperties.getProperty('DEFAULT_IMAGE_MOCKUP');
+      documentProperties.getProperty('UX_DEFAULT_IMAGE_MOCKUP');
   const criteriaInsightSlidesIndex =
-      documentProperties.getProperty('RECOMMENDATIONS_INSIGHTS_ROW') - 1;
+      documentProperties.getProperty('INSIGHT_SLIDE_ID_COLUMN') - 1;
 
   const criteriaId = row[criteriaIdIndex];
   const criteria = row[criteriaNameIndex];
@@ -183,7 +183,7 @@ function retrieveClientImage(folder, criteriaId) {
 
   if (file === null) {
     file = PropertiesService.getDocumentProperties().getProperty(
-        'DEFAULT_IMAGE_MOCKUP');
+        'UX_DEFAULT_IMAGE_MOCKUP');
   }
 
   return file;

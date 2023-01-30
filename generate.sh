@@ -21,8 +21,8 @@ function check_login () {
 
 # Function to copy files from the main codebase into the clasp folder
 function copy_files () {
-  cp "../sls_core.js" "sls_core.js"
-  cp "../sls_$audit_type.js" "sls_$audit_type.js"
+  cp "../src/sls_core.js" "sls_core.js"
+  cp "../src/sls_$audit_type.js" "sls_$audit_type.js"
 
   echo "Files successfully copied to output folder"
 }
