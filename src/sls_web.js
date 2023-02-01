@@ -17,7 +17,7 @@ function onOpen() {
     const menuItems = [
       {
         name: 'Generate starter slide deck',
-        functionName: 'createDeckFromDatasource',
+        functionName: 'createStarterSlides',
       },
       {
         name: 'Load configuration',
@@ -34,6 +34,17 @@ function onOpen() {
   }
 }
 
+/* eslint-disable no-unused-vars*/
+/**
+ * Loads configuration, fetches metrics for URLs, and creates slide deck.
+*/
+function createStarterSlides() {
+  loadConfiguration();
+  cloneSitesSheet();
+  runBatchFromQueue();
+  createDeckFromDatasource();
+}
+/* eslint-enable no-unused-vars*/
 const CWV = {
   LCP: [2500, 4000],
   FID: [100, 300],
