@@ -45,6 +45,12 @@ function createStarterSlides() {
   createDeckFromDatasource();
 }
 /* eslint-enable no-unused-vars*/
+
+/**
+ * Object whose keys represent Core Web Vital metrics and values are Arrays that
+ * contain the low & high thresholds for that metric. Used in coloring the table
+ * for CrUX CWV data.
+ */
 const CWV = {
   LCP: [2500, 4000],
   FID: [100, 300],
@@ -52,34 +58,45 @@ const CWV = {
 };
 
 /**
- * Parses the fields contained on the incoming row from the spreadsheet into
- * some specific information fields, and then creates the slide using GAS.
- *
- * @param {!Presentation} deck Id of the generated deck that will contain the
- *     recos
- * @param {!Presentation} insightDeck Reference to the generated deck
- * @param {!Layout} recommendationSlideLayout The template layout
- * @param {!Array<string>} row Array of strings with information from the
- *     spreadsheet
- */
+   * Object whose keys are colors and values are arrays of RGB values in
+   * decimal. Used in coloring the table for CrUX CWV data.
+   */
+const COLORS = {
+  GREEN: [.04, .80, .41], // Good
+  YELLOW: [1, 0.64, 0], // Needs Improvement
+  RED: [1, 0.30, 0.25], // Poor
+  WHITE: [1, 1, 1], // None
+};
+
+/**
+   * Parses the fields contained on the incoming row from the spreadsheet into
+   * some specific information fields, and then creates the slide using GAS.
+   *
+   * @param {!Presentation} deck Id of the generated deck that will contain the
+   *     recos
+   * @param {!Presentation} insightDeck Reference to the generated deck
+   * @param {!Layout} recommendationSlideLayout The template layout
+   * @param {!Array<string>} row Array of strings with information from the
+   *     spreadsheet
+   */
 function parseFieldsAndCreateSlide(
     deck, insightDeck, recommendationSlideLayout, row) {
   const criteriaNameIndex =
-      documentProperties.getProperty('TITLE_COLUMN') - 1;
+        documentProperties.getProperty('TITLE_COLUMN') - 1;
   const criteriaAppliesIndex =
-      documentProperties.getProperty('SUBTITLE_COLUMN') - 1;
+        documentProperties.getProperty('SUBTITLE_COLUMN') - 1;
   const criteriaProblemStatementIndex =
-      documentProperties
-          .getProperty('WEB_RECOMMENDATIONS_PROBLEM_STATEMENT_ROW') - 1;
+        documentProperties
+            .getProperty('WEB_RECOMMENDATIONS_PROBLEM_STATEMENT_ROW') - 1;
   const criteriaSolutionStatementIndex =
-      documentProperties
-          .getProperty('WEB_RECOMMENDATIONS_SOLUTION_STATEMENT_ROW') - 1;
+        documentProperties
+            .getProperty('WEB_RECOMMENDATIONS_SOLUTION_STATEMENT_ROW') - 1;
   const criteriaInsightSlidesIndex =
-      documentProperties.getProperty('INSIGHT_SLIDE_ID_COLUMN') - 1;
+        documentProperties.getProperty('INSIGHT_SLIDE_ID_COLUMN') - 1;
 
   const criteria = row[criteriaNameIndex];
   const applicable =
-      `Applies for: ${row[criteriaAppliesIndex].split(',').join(',')}`;
+        `Applies for: ${row[criteriaAppliesIndex].split(',').join(',')}`;
   const description = row[criteriaProblemStatementIndex];
   const learnMore = row[criteriaSolutionStatementIndex];
   const insights = row[criteriaInsightSlidesIndex].split(',');
@@ -93,15 +110,15 @@ function parseFieldsAndCreateSlide(
 }
 
 /**
- * Applies any extra operations to the deck based on the specifics of the audit
- *
- * @param {string} newDeckId Id of the generated deck that will contain the
- *     recos
- */
+   * Applies any extra operations to the deck based on the specifics of the audit
+   *
+   * @param {string} newDeckId Id of the generated deck that will contain the
+   *     recos
+   */
 function applyCustomStyle(newDeckId) {
   const deck = SlidesApp.openById(newDeckId);
   const insightDeck =
-      SlidesApp.openById(documentProperties.getProperty('INSIGHTS_DECK_ID'));
+        SlidesApp.openById(documentProperties.getProperty('INSIGHTS_DECK_ID'));
   const endSlideId = documentProperties.getProperty('END_SLIDE_ID');
   const endSlide = insightDeck.getSlideById(endSlideId.trim());
   deck.appendSlide(endSlide, SlidesApp.SlideLinkingMode.NOT_LINKED);
@@ -115,17 +132,17 @@ function applyCustomStyle(newDeckId) {
 }
 
 /**
- * Creates the slides programmatically using the SlidesApp from AppScript:
- * It first creates a new slide with the specified layout, it populates the
- * placeholders with
- *
- * @param {string} deck Id of the generated deck that will contain the recos
- * @param {!Layout} recommendationSlideLayout The template layout
- * @param {string} criteria The name of the criteria used as title
- * @param {string} applicable A list of pages where this criteria is applicable
- * @param {string} description The description of the failing criteria
- * @param {string} learnMore The URL of the page with extended information
- */
+   * Creates the slides programmatically using the SlidesApp from AppScript:
+   * It first creates a new slide with the specified layout, it populates the
+   * placeholders with
+   *
+   * @param {string} deck Id of the generated deck that will contain the recos
+   * @param {!Layout} recommendationSlideLayout The template layout
+   * @param {string} criteria The name of the criteria used as title
+   * @param {string} applicable A list of pages where this criteria is applicable
+   * @param {string} description The description of the failing criteria
+   * @param {string} learnMore The URL of the page with extended information
+   */
 function createRecommendationSlideGAS(
     deck, recommendationSlideLayout, criteria, applicable, description,
     learnMore) {
@@ -134,9 +151,9 @@ function createRecommendationSlideGAS(
   const slide = deck.appendSlide(recommendationSlideLayout);
 
   const titlePlaceholder =
-      slide.getPlaceholder(SlidesApp.PlaceholderType.TITLE);
-  // const subtitlePlaceholder =
-  //     slide.getPlaceholder(SlidesApp.PlaceholderType.SUBTITLE);
+        slide.getPlaceholder(SlidesApp.PlaceholderType.TITLE);
+    // const subtitlePlaceholder =
+    //     slide.getPlaceholder(SlidesApp.PlaceholderType.SUBTITLE);
   const bodyPlaceholder = slide.getPlaceholder(SlidesApp.PlaceholderType.BODY);
 
   const titleRange = titlePlaceholder.asShape().getText();
@@ -157,21 +174,21 @@ function createRecommendationSlideGAS(
 }
 
 /**
- * Builds a SlidesAPI request to handle the table formatting properties that
- * are not accessible via the SlidesAPI service, such as column width.
- * These requests are retrieved and stored from the document properties after
- * being flattened as JSON.
- *
- * @param {string} tableId String that identifies the table to modify
- * @param {string} rowIndex String that identifies the table to modify
- * @param {string} columnIndex String that identifies the table to modify
- * @param {string} color String that identifies the table to modify
- */
+   * Builds a SlidesAPI request to handle the table formatting properties that
+   * are not accessible via the SlidesAPI service, such as column width.
+   * These requests are retrieved and stored from the document properties after
+   * being flattened as JSON.
+   *
+   * @param {string} tableId String that identifies the table to modify
+   * @param {Number} rowIndex Number that identifies the row to modify
+   * @param {Number} columnIndex Number that identifies the column to modify
+   * @param {Array} color Array of RGB values for the table cell
+   */
 function buildBackgroundCellColorTableStyleSlidesRequest(
     tableId, rowIndex, columnIndex, color) {
   const documentProperties = PropertiesService.getDocumentProperties();
   const requests =
-      JSON.parse(documentProperties.getProperty('SLIDES_REQUESTS'));
+        JSON.parse(documentProperties.getProperty('SLIDES_REQUESTS'));
 
   requests.push({
     updateTableCellProperties: {
@@ -201,29 +218,30 @@ function buildBackgroundCellColorTableStyleSlidesRequest(
 }
 
 /**
- *
- * @param {*} cwv
- * @param {*} value
- * @return {*}
- */
-function colorForCWV(cwv, value) {
-  const lowThreshold = cwv[0];
-  const highThreshold = cwv[1];
-
-  if (value <= lowThreshold) {
-    return [.04, .80, .41];
+   * Determines a color based on if a value is a Good, Needs Improvement or Poor
+   * range for a given metric.
+   *
+   * @param {Array} range Array of with a low and high threshold for a CWV metric
+   * @param {Number} value Number indicating the metric score
+   * @return {Array} Array of RBG values in decimal form
+   */
+function colorForCWV([lowThreshold, highThreshold], value) {
+  if (!value.trim()) {
+    return COLORS.WHITE;
+  } else if (value <= lowThreshold) {
+    return COLORS.GREEN;
   } else if (value < highThreshold) {
-    return [1, 0.64, 0];
+    return COLORS.YELLOW;
   } else {
-    return [1, 0.30, 0.25];
+    return COLORS.RED;
   }
 }
 
 /**
- * Applies conditional coloring table to the CWV parameter table
- *
- * @param {string} deckId
- */
+   * Applies conditional coloring table to the CWV parameter table
+   *
+   * @param {string} deckId
+   */
 function colorCWVTable(deckId) {
   const documentProperties = PropertiesService.getDocumentProperties();
   const cwvSlideIndex = documentProperties.getProperty('CWV_SLIDE');
@@ -255,4 +273,3 @@ function colorCWVTable(deckId) {
         cwvTable.getObjectId(), i, 4, color);
   }
 }
-
