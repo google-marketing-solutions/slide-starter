@@ -160,15 +160,15 @@ function createRecommendationSlideGAS(
 
   const titlePlaceholder =
       slide.getPlaceholder(SlidesApp.PlaceholderType.TITLE);
-  // const subtitlePlaceholder =
-  //     slide.getPlaceholder(SlidesApp.PlaceholderType.SUBTITLE);
+  const subtitlePlaceholder =
+      slide.getPlaceholder(SlidesApp.PlaceholderType.SUBTITLE);
   const bodyPlaceholder = slide.getPlaceholder(SlidesApp.PlaceholderType.BODY);
 
   const titleRange = titlePlaceholder.asShape().getText();
   titleRange.setText(criteria);
 
-  // const subtitleRange = subtitlePlaceholder.asShape().getText();
-  // subtitleRange.setText(applicable);
+  const subtitleRange = subtitlePlaceholder.asShape().getText();
+  subtitleRange.setText(applicable);
 
   const bodyRange = bodyPlaceholder.asShape().getText();
   bodyRange.setText(description);
