@@ -81,8 +81,7 @@ const COLORS = {
  */
 function parseFieldsAndCreateSlide(
     deck, insightDeck, recommendationSlideLayout, row) {
-  const criteriaNameIndex =
-      documentProperties.getProperty('TITLE_COLUMN') - 1;
+  const criteriaNameIndex = documentProperties.getProperty('TITLE_COLUMN') - 1;
   const criteriaAppliesIndex =
       documentProperties.getProperty('SUBTITLE_COLUMN') - 1;
   const criteriaProblemStatementIndex =
@@ -95,14 +94,17 @@ function parseFieldsAndCreateSlide(
       documentProperties.getProperty('INSIGHT_SLIDE_ID_COLUMN') - 1;
 
   const criteria = row[criteriaNameIndex];
-  const applicable =
-      `Applies for: ${row[criteriaAppliesIndex].split(',').join(',')}`;
+  const applicable = row[criteriaAppliesIndex];
+  let potentialSubtitle = '';
+  if (applicable) {
+    potentialSubtitle = `Applies for: ${applicable}`;
+  }
   const description = row[criteriaProblemStatementIndex];
   const learnMore = row[criteriaSolutionStatementIndex];
   const insights = row[criteriaInsightSlidesIndex].split(',');
 
   createRecommendationSlideGAS(
-      deck, recommendationSlideLayout, criteria, applicable, description,
+      deck, recommendationSlideLayout, criteria, potentialSubtitle, description,
       learnMore, insights);
   if (insights.length > 0) {
     appendInsightSlides(deck, insightDeck, insights);
