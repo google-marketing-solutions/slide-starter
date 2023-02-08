@@ -58,8 +58,8 @@ const CWV = {
 };
 
 /**
- * Object whose keys are colors and values are arrays of RGB values in
- * decimal. Used in coloring the table for CrUX CWV data.
+ * Object whose keys are colors and values are arrays of RGB values in decimal.
+ * Used in coloring the table for CrUX CWV data.
  */
 const COLORS = {
   GREEN: [.04, .80, .41], // Good
@@ -119,6 +119,14 @@ function applyCustomStyle(newDeckId) {
   const deck = SlidesApp.openById(newDeckId);
   const insightDeck =
       SlidesApp.openById(documentProperties.getProperty('INSIGHTS_DECK_ID'));
+  const appendixDeckId = documentProperties.getProperty('APPENDIX_DECK_ID');
+  if (appendixDeckId) {
+    const appendixSlides = SlidesApp.openById(appendixDeckId).getSlides();
+    const thisDeck = SlidesApp.openById(newDeckId);
+    for (const slide of appendixSlides) {
+      thisDeck.appendSlide(slide, SlidesApp.SlideLinkingMode.NOT_LINKED);
+    }
+  }
   const endSlideId = documentProperties.getProperty('END_SLIDE_ID');
   const endSlide = insightDeck.getSlideById(endSlideId.trim());
   deck.appendSlide(endSlide, SlidesApp.SlideLinkingMode.NOT_LINKED);
