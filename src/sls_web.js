@@ -3,6 +3,7 @@
  */
 
 /* exported applyCustomStyle */
+/* exported createStarterSlides */
 /* exported onOpen */
 /* exported parseFieldsAndCreateSlide */
 
@@ -34,7 +35,6 @@ function onOpen() {
   }
 }
 
-/* eslint-disable no-unused-vars*/
 /**
  * Loads configuration, fetches metrics for URLs, and creates slide deck.
  */
@@ -44,7 +44,6 @@ function createStarterSlides() {
   runBatchFromQueue();
   createDeckFromDatasource();
 }
-/* eslint-enable no-unused-vars*/
 
 /**
  * Object whose keys represent Core Web Vital metrics and values are Arrays that
