@@ -228,7 +228,7 @@ function buildBackgroundCellColorTableStyleSlidesRequest(
  * Determines a color based on if a value is a Good, Needs Improvement or Poor
  * range for a given metric.
  *
- * @param {Array} range Array of with a low and high threshold for a CWV metric
+ * @param {Array} range Array with a low and high threshold for a CWV metric
  * @param {Number} value Number indicating the metric score
  * @return {Array} Array of RBG values in decimal form
  */
