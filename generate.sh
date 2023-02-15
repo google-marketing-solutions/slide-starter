@@ -5,7 +5,7 @@ clasp_upload=$2
 clasp_script_url=$3
 
 # Check if the audit_type is valid
-if [[ "$audit_type" != "app" && "$audit_type" != "web" && "$audit_type" != "ux" ]]; then
+if [[ "$audit_type" != "app" && "$audit_type" != "speed" && "$audit_type" != "ux" ]]; then
   echo "Error: Invalid audit type"
   exit 1
 fi
