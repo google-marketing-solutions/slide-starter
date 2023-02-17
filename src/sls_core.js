@@ -217,40 +217,44 @@ function filterAndSortData() {
   }
 
   const filter = sheet.getRange(1, 1, lastRow, lastColumn).createFilter();
-  const failingFilterCriteria =
-      SpreadsheetApp.newFilterCriteria().whenTextContains(
-          documentProperties.getProperty('FILTER_TEXT_VALUE'));
-  filter.sort(documentProperties.getProperty('SORTING_COLUMN'), sortingOrder)
-      .setColumnFilterCriteria(
-          documentProperties.getProperty('FILTER_COLUMN'),
-          failingFilterCriteria);
+  const filterColumn = documentProperties.getProperty('FILTER_COLUMN');
+  if (filterColumn && filterColumn.length > 0) {
+    const failingFilterCriteria =
+        SpreadsheetApp.newFilterCriteria().whenTextContains(
+            documentProperties.getProperty('FILTER_TEXT_VALUE'));
+    filter.sort(documentProperties.getProperty('SORTING_COLUMN'), sortingOrder)
+        .setColumnFilterCriteria(
+            documentProperties.getProperty('FILTER_COLUMN'),
+            failingFilterCriteria);
+  }
 }
 
 /**
- * Creates a presentation based on a set of recommendations included in a
+ * Creates a presentation based on a set of rows of data included in a
  * spreadsheet. For this, it creates a copy of a base deck, it retrieves the
  * correct template, it filters and sorts the recommendations and it creates
  * a slide operation request for each row that wasn't hidden by the filter
  * excluding the header row.
  */
 function createDeckFromDatasource() {
+  const documentProperties = PropertiesService.getDocumentProperties();
   loadConfiguration();
   filterAndSortData();
-  const documentProperties = PropertiesService.getDocumentProperties();
+
   const spreadsheet = SpreadsheetApp.getActive().getSheetByName(
       documentProperties.getProperty('DATA_SOURCE_SHEET'));
   const values = spreadsheet.getFilter().getRange().getValues();
 
-  // TODO: Check if there are no sorted recommendations as part of that, and
-  // stop the process. The problem with this is that there's no way to quickly
-  // obtain the amount of results filtered
-
   const newDeckId = createBaseDeck();
+  const deck = SlidesApp.openById(newDeckId);
   const recommendationSlideLayout = getTemplateLayout(newDeckId);
 
-  const deck = SlidesApp.openById(newDeckId);
-  const insightDeck =
-      SlidesApp.openById(documentProperties.getProperty('INSIGHTS_DECK_ID'));
+  let insightDeck;
+  const insightsDeckId = documentProperties.getProperty('INSIGHTS_DECK_ID');
+  if (insightsDeckId && insightsDeckId.length > 0) {
+    insightDeck =
+        SlidesApp.openById(documentProperties.getProperty('INSIGHTS_DECK_ID'));
+  }
 
   for (let i = 1; i < values.length; i++) {
     if (spreadsheet.isRowHiddenByFilter(i + 1)) {
@@ -261,7 +265,11 @@ function createDeckFromDatasource() {
         deck, insightDeck, recommendationSlideLayout, row);
   }
 
-  customDataInjection(newDeckId);
+  const dictionarySheetName =
+      documentProperties.getProperty('DICTIONARY_SHEET_NAME');
+  if (dictionarySheetName && dictionarySheetName.length > 0) {
+    customDataInjection(newDeckId);
+  }
+
   applyCustomStyle(newDeckId);
 }
-
