@@ -50,8 +50,8 @@ const documentProperties = PropertiesService.getDocumentProperties();
  *
  * @param {number} properties Number of properties to be expected
  */
-function loadConfiguration(properties = NUM_PROPERTIES) {
-  const range = SpreadsheetApp.getActive().getRangeByName(RANGE_NAME);
+function loadConfiguration(range = RANGE_NAME, properties = NUM_PROPERTIES) {
+  const range = SpreadsheetApp.getActive().getRangeByName(range);
   if (!range) {
     throw new Error(ERROR_MISSING_RANGE);
   }

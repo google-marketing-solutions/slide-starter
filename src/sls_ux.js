@@ -16,8 +16,6 @@
 const WARNING_NO_IMAGES = 'No image found for criteria id ';
 const WARNING_MULTIPLE_IMAGES = 'No image found for criteria id ';
 
-const NUM_PROPERTIES_UX = 16;
-
 /* exported applyCustomStyle */
 /* exported onOpen */
 /* exported parseFieldsAndCreateSlide */
@@ -27,7 +25,7 @@ const NUM_PROPERTIES_UX = 16;
  * custom menu to the spreadsheet.
  */
 function onOpen() {
-  loadConfiguration(NUM_PROPERTIES_UX);
+  loadConfiguration();
   const spreadsheet = SpreadsheetApp.getActive();
   const menuItems = [
     {
