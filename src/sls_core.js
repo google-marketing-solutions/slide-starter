@@ -38,7 +38,7 @@ const ERROR_NO_SHAPE = 'There was a problem retrieving the shape layout.';
 
 // Properties configuration
 const RANGE_NAME = 'Configuration!PROPERTIES';
-const NUM_PROPERTIES = 16;
+const NUM_PROPERTIES = 5;
 
 // Document properties
 const documentProperties = PropertiesService.getDocumentProperties();
@@ -50,15 +50,12 @@ const documentProperties = PropertiesService.getDocumentProperties();
  *
  * @param {number} properties Number of properties to be expected
  */
-function loadConfiguration(range = RANGE_NAME, properties = NUM_PROPERTIES) {
-  const range = SpreadsheetApp.getActive().getRangeByName(range);
+function loadConfiguration(rangeName = RANGE_NAME, properties = NUM_PROPERTIES) {
+  const range = SpreadsheetApp.getActive().getRangeByName(rangeName);
   if (!range) {
     throw new Error(ERROR_MISSING_RANGE);
   }
   const values = range.getValues();
-  if (values.length < properties) {
-    throw new Error(ERROR_MISSING_PROPERTY);
-  }
   for (const value of values) {
     documentProperties.setProperty(value[0], String(value[1]));
   }
@@ -84,6 +81,23 @@ function createBaseDeck() {
       .makeCopy(
           documentProperties.getProperty('OUTPUT_DECK_NAME'), parentFolder)
       .getId();
+}
+
+/**
+ * Creates a subsection header slide within a specified deck
+ * and appends it.
+ *
+ * @param {string} deckId Object identifier for the slide deck
+ * @param {!Layout} layout Layout object relative to the header slide
+ * @param {string} title Name of the section of the audit
+ */
+function createHeaderSlide(deckId, layout, title) {
+  const deck = SlidesApp.openById(deckId);
+  const slide = deck.appendSlide(layout);
+  const titlePlaceholder =
+      slide.getPlaceholder(SlidesApp.PlaceholderType.TITLE);
+  const titleRange = titlePlaceholder.asShape().getText();
+  titleRange.setText(title);
 }
 
 /**
@@ -118,11 +132,11 @@ function customDataInjection(newDeckId) {
  *     been generated
  * @return {string} Id of the layout matched by defined name
  */
-function getTemplateLayoutId(presentationId) {
+function getTemplateLayoutId(presentationId, layoutName = null) {
   const layouts = Slides.Presentations.get(presentationId).layouts;
+  const nameToMatch = layoutName ? layoutName : documentProperties.getProperty('LAYOUT_NAME');
   for (const layout of layouts) {
-    if (layout.layoutProperties.displayName ===
-        documentProperties.getProperty('LAYOUT_NAME')) {
+    if (layout.layoutProperties.displayName === nameToMatch) {
       return layout.objectId;
     }
   }
@@ -138,9 +152,9 @@ function getTemplateLayoutId(presentationId) {
  *     been generated
  * @return {?Layout} Layout object matched by defined name if found or null
  */
-function getTemplateLayout(presentationId) {
+function getTemplateLayout(presentationId, layoutName = null) {
   const layouts = SlidesApp.openById(presentationId).getLayouts();
-  const layoutId = getTemplateLayoutId(presentationId);
+  const layoutId = getTemplateLayoutId(presentationId, layoutName);
   for (const layout of layouts) {
     if (layout.getObjectId() === layoutId) {
       return layout;
@@ -197,11 +211,13 @@ function appendInsightSlides(deck, insightDeck, insights) {
  * applies new filter based on criteria, and sorts by a specified column in the
  * trix.
  */
-function filterAndSortData() {
+function filterAndSortData(sheet = undefined) {
   SpreadsheetApp.getActiveSpreadsheet().toast('Filtering and sorting');
   const documentProperties = PropertiesService.getDocumentProperties();
-  const sheet = SpreadsheetApp.getActive().getSheetByName(
+  if (!sheet) {
+    sheet = SpreadsheetApp.getActive().getSheetByName(
       documentProperties.getProperty('DATA_SOURCE_SHEET'));
+  }
 
   const lastRow = sheet.getLastRow();
   const lastColumn = sheet.getLastColumn();
@@ -273,3 +289,120 @@ function createDeckFromDatasource() {
 
   applyCustomStyle(newDeckId);
 }
+
+/**
+ * 
+ */
+function createDeckFromDatasources() {
+  const documentProperties = PropertiesService.getDocumentProperties();
+  loadConfiguration();
+
+  const newDeckId = createBaseDeck();
+
+  const datasourceString = documentProperties.getProperty('DATA_SOURCE_SHEET');
+  const datasourcesArray = datasourceString.split(',').map( item => item.trim());
+
+  const sectionLayoutName =  documentProperties.getProperty('SECTION_LAYOUT_NAME');
+  let sectionLayout;
+  if (sectionLayoutName && sectionLayoutName.length > 0) {
+     sectionLayout = getTemplateLayout(newDeckId, sectionLayoutName);
+  }
+
+  for (const datasource of datasourcesArray) {
+    if (sectionLayout) {
+      createHeaderSlide(deckId, sectionLayout, datasource);
+    }
+    prepareDependenciesAndCreateSlides(datasource, newDeckId);
+  }
+
+  const dictionarySheetName =
+      documentProperties.getProperty('DICTIONARY_SHEET_NAME');
+  if (dictionarySheetName && dictionarySheetName.length > 0) {
+    customDataInjection(newDeckId);
+  }
+
+  applyCustomStyle(newDeckId);
+}
+
+function prepareDependenciesAndCreateSlides(datasource, newDeckId) {
+  const documentProperties = PropertiesService.getDocumentProperties();
+  const datasourceConfiguration = "'Configuration_" + datasource + "'!PROPERTIES";
+  loadConfiguration(datasourceConfiguration);
+
+  const deck = SlidesApp.openById(newDeckId);
+  const recommendationSlideLayout = getTemplateLayout(newDeckId);
+
+  let insightDeck;
+  const insightsDeckId = documentProperties.getProperty('INSIGHTS_DECK_ID');
+  if (insightsDeckId && insightsDeckId.length > 0) {
+    insightDeck =
+        SlidesApp.openById(documentProperties.getProperty('INSIGHTS_DECK_ID'));
+  }
+
+  createSlidesForDatasource(
+    datasource, deck, insightDeck, recommendationSlideLayout);
+}
+
+/**
+ * Embed a Sheets chart (indicated by the spreadsheetId and sheetChartId) onto
+ *   a page in the presentation. Setting the linking mode as 'LINKED' allows the
+ *   chart to be refreshed if the Sheets version is updated.
+ * @param {string} presentationId
+ * @param {string} pageId
+ * @param {string} spreadsheetId
+ * @param {string} sheetChartId
+ * @param {string} slideChartShape
+ * @returns {*}
+ */
+function replaceSlideShapeWithSheetsChart(presentationId, spreadsheetId, sheetChartId, slidePageId, slideChartShape) {
+  const chartHeight = slideChartShape.getInherentHeight();
+  const chartWidth = slideChartShape.getInherentWidth();
+  const chartTransform = slideChartShape.getTransform();
+  const emu4M = {
+    magnitude: 4000000,
+    unit: 'EMU'
+  };
+  const presentationChartId = 'chart-test';
+  const requests = [{
+    createSheetsChart: {
+      objectId: presentationChartId,
+      spreadsheetId: spreadsheetId,
+      chartId: sheetChartId,
+      linkingMode: 'LINKED',
+      elementProperties: {
+        pageObjectId: slidePageId,
+        size: {
+        width: {
+          magnitude: chartHeight,
+          unit: 'PT'
+        },
+        height: {
+          magnitude: chartWidth,
+          unit: 'PT'
+        }
+      },
+      transform: {
+        scaleX: chartTransform.getScaleX(),
+        scaleY: chartTransform.getScaleY(),
+        translateX: chartTransform.getTranslateX(),
+        translateY: chartTransform.getTranslateY(),
+        unit: 'PT'
+      }
+      }
+    }
+  }];
+
+  // Execute the request.
+  try {
+    const batchUpdateResponse = Slides.Presentations.batchUpdate({
+      requests: requests
+    }, presentationId);
+    console.log('Added a linked Sheets chart with ID: %s', presentationChartId);
+    slideChartShape.remove();
+    return batchUpdateResponse;
+  } catch (err) {
+    // TODO (Developer) - Handle exception
+    console.log('Failed with error: %s', err.error);
+    console.log('Failed with error: %s', err);
+  }
+};

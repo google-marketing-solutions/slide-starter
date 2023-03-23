@@ -2,7 +2,7 @@
  * Google AppScript File
  * @fileoverview Script used in the UX Starter project to automate UX audits.
  *
- * UX Starter V7 - 27/01/23
+ * UX Starter V7 - 03/03/23
  */
 
 // Error messages
@@ -37,11 +37,58 @@ function onOpen() {
       functionName: 'filterAndSortData',
     },
     {
-      name: 'Filter criteria and generate deck',
-      functionName: 'createDeckFromDatasource',
+      name: 'Generate deck',
+      functionName: 'createDeckFromDatasources',
     },
   ];
-  spreadsheet.addMenu('UX Starter', menuItems);
+  spreadsheet.addMenu('Katalyst', menuItems);
+}
+
+
+function createSlidesForDatasource(
+  datasource, deck, insightDeck, slideLayout) {
+  switch (datasource) {
+    case 'Sustainable benchmark':
+      parseFieldsAndCreateSlideSustainability(datasource, deck, slideLayout);
+      break;
+    default:
+      const spreadsheet = SpreadsheetApp.getActive().getSheetByName(
+        documentProperties.getProperty('DATA_SOURCE_SHEET'));
+      filterAndSortData();
+      const values = spreadsheet.getFilter().getRange().getValues();
+      for (let i = 1; i < values.length; i++) {
+        if (spreadsheet.isRowHiddenByFilter(i + 1)) {
+          continue;
+        }
+        const row = values[i];
+        parseFieldsAndCreateSlide(deck, insightDeck, slideLayout, row);
+      }
+      break;
+  }
+}
+
+function parseFieldsAndCreateSlideSustainability(datasource, deck, slideLayout) {
+  const presentationId = deck.getId();
+  //Preparing the data and adding it into the chart
+  const spreadsheet = SpreadsheetApp.getActive().getSheetByName(
+    documentProperties.getProperty('RECOMMENDATIONS_SHEET'));
+  filterAndSortData(spreadsheet);
+  const values = spreadsheet.getFilter().getRange().getValues();
+  const chartSheetName = documentProperties.getProperty('DATA_SOURCE_SHEET');
+  buildReadinessAnalysis(spreadsheet, values, chartSheetName);
+
+  //Retrieving and inserting the chart
+  const chartSheet = SpreadsheetApp.getActive().getSheetByName(chartSheetName);
+  const spreadsheetId = SpreadsheetApp.getActive().getId();
+  const sheetChartId = chartSheet.getCharts()[0].getChartId();
+  const slide = deck.appendSlide(slideLayout);
+  if (deck.getMasters().length > 1) {
+    deck.getMasters()[deck.getMasters().length - 1].remove();
+  }
+  const slidePageId = slide.getObjectId(); 
+  const slideShape = retrieveShape(slide, 'chart-location');
+  deck.saveAndClose();
+  replaceSlideShapeWithSheetsChart(presentationId, spreadsheetId, sheetChartId, slidePageId, slideShape);
 }
 
 /**
@@ -116,6 +163,9 @@ function createRecommendationSlideGAS(
     deck, recommendationSlideLayout, criteria, applicable, description,
     imageMockup, clientImage) {
   const slide = deck.appendSlide(recommendationSlideLayout);
+  if (deck.getMasters().length > 1) {
+    deck.getMasters()[deck.getMasters().length - 1].remove();
+  }
 
   const titlePlaceholder =
       slide.getPlaceholder(SlidesApp.PlaceholderType.TITLE);
@@ -201,4 +251,3 @@ function applyCustomStyle(newDeckId) {
   const endSlide = insightDeck.getSlideById(endSlideId.trim());
   deck.appendSlide(endSlide, SlidesApp.SlideLinkingMode.NOT_LINKED);
 }
-
