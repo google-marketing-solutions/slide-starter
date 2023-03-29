@@ -12,8 +12,8 @@ globalThis.PropertiesService = {
 
 const core = require('../src/sls_core.js');
 
-describe('Sls Core', function () {
-  it('should getTemplateLayoutId', function () {
+describe('Sls Core', function() {
+  it('should getTemplateLayoutId', function() {
     globalThis.Slides = {
       Presentations: {
         get: (presentationId) => {

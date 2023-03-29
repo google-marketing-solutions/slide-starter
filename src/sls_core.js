@@ -266,5 +266,5 @@ function createDeckFromDatasource() {
 }
 
 module.exports = {
-  getTemplateLayoutId: getTemplateLayoutId
+  getTemplateLayoutId: getTemplateLayoutId,
 };
