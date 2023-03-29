@@ -1,0 +1,35 @@
+{
+  "name": "slide-starter",
+  "version": "1.0.0",
+  "description": "Slide Starter is a simple tool that simplifies the process of creating slide decks for mobile website and app audits through Apps Script, leveraging Google Sheets for the analysis.",
+  "main": ".eslintrc.js",
+  "type": "commonjs",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gtech-professional-services/slide-starter.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/gtech-professional-services/slide-starter/issues"
+  },
+  "homepage": "https://github.com/gtech-professional-services/slide-starter#readme",
+  "devDependencies": {
+    "browserify": "^17.0.0",
+    "jasmine": "^4.6.0",
+    "jasmine-core": "^4.6.0",
+    "karma": "^6.4.1",
+    "karma-browserify": "^8.1.0",
+    "karma-chrome-launcher": "^3.1.1",
+    "karma-jasmine": "^5.1.0",
+    "karma-jasmine-html-reporter": "^2.0.0",
+    "karma-spec-reporter": "^0.0.36",
+    "watchify": "^4.0.0"
+  }
+}
