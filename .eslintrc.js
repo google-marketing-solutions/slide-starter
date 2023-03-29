@@ -1,9 +1,10 @@
 module.exports = {
+  'ignorePatterns': ['karma.conf.js'],
   'extends':
-            [
-              'eslint:recommended',
-              'google',
-            ],
+    [
+      'eslint:recommended',
+      'google',
+    ],
   'env': {
     'browser': true,
     'es2021': true,
