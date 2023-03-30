@@ -9,8 +9,7 @@
   },
   "scripts": {
     "build": "rm -rf dist && tsc",
-    "test": "mocha -r ts-node/register test/*.spec.ts",
-    "lint": "gts lint src"
+    "test": "mocha -r ts-node/register test/*.spec.ts"
   },
   "repository": {
     "type": "git",

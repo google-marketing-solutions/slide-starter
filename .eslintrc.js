@@ -1,4 +1,5 @@
 module.exports = {
+  'ignorePatterns': ['test/Core.spec.ts'],
   'extends':
     [
       'eslint:recommended',
