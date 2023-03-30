@@ -8,9 +8,8 @@
     "doc": "docs"
   },
   "scripts": {
-    "test": "karma start karma.conf.js",
-    "test:headless": "karma start karma.conf.js --browsers PhantomJS",
-    "test:chrome": "karma start karma.conf.js --browsers Chrome"
+    "build": "rm -rf dist && tsc",
+    "test": "mocha -r ts-node/register test/*.spec.ts"
   },
   "repository": {
     "type": "git",
@@ -23,15 +22,15 @@
   },
   "homepage": "https://github.com/gtech-professional-services/slide-starter#readme",
   "devDependencies": {
-    "browserify": "^17.0.0",
-    "jasmine": "^4.6.0",
-    "jasmine-core": "^4.6.0",
-    "karma": "^6.4.1",
-    "karma-browserify": "^8.1.0",
-    "karma-chrome-launcher": "^3.1.1",
-    "karma-jasmine": "^5.1.0",
-    "karma-jasmine-html-reporter": "^2.0.0",
-    "karma-spec-reporter": "^0.0.36",
-    "watchify": "^4.0.0"
-  }
+    "@types/chai": "^4.3.4",
+    "@types/mocha": "^10.0.1",
+    "@types/rewire": "^2.5.28",
+    "chai": "^4.3.7",
+    "mocha": "^10.2.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.2",
+    "watchify": "^4.0.0",
+    "rewire": "^6.0.0"
+  },
+  "dependencies": {}
 }

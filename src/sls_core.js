@@ -264,7 +264,3 @@ function createDeckFromDatasource() {
   customDataInjection(newDeckId);
   applyCustomStyle(newDeckId);
 }
-
-module.exports = {
-  getTemplateLayoutId: getTemplateLayoutId,
-};
