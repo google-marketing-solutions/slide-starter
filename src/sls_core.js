@@ -1,6 +1,7 @@
 /* exported retrieveShape */
 /* exported appendInsightSlides */
-/* exported createDeckFromDatasource */
+/* exported createDeckFromDatasources */
+/* exported replaceSlideShapeWithSheetsChart*/
 /**
  * Google AppScript File
  * @fileoverview Includes the core shared functions between the different
@@ -31,8 +32,6 @@
  */
 
 // Error messages
-const ERROR_MISSING_PROPERTY =
-    'There\'s a missing property from the configuration.';
 const ERROR_MISSING_RANGE = 'Couldn\'t find the named range in Configuration.';
 const ERROR_NO_SHAPE = 'There was a problem retrieving the shape layout.';
 
@@ -47,7 +46,7 @@ const documentProperties = PropertiesService.getDocumentProperties();
  * active spreadsheet and maps them to the document properties using
  * the properties service.
  *
- * @param {number} properties Number of properties to be expected
+ * @param {string} rangeName Optional name of the range to use
  */
 function loadConfiguration(rangeName = RANGE_NAME) {
   const range = SpreadsheetApp.getActive().getRangeByName(rangeName);
@@ -127,9 +126,11 @@ function customDataInjection(newDeckId) {
  * returns the correct one once it has found a match. This function assumes that
  * the base template contains the layout name as specified on the constants.
  *
- * @param {string} presentationId Id of the new slide deck that has
- *     been generated
- * @return {string} Id of the layout matched by defined name
+ * @param {string} presentationId The ID of the new slide deck that has been
+ *  generated.
+ * @param {string=} layoutName (optional) The name of the layout to match.
+ * @return {string} The ID of the layout matched by the defined name.
+ * @throws {Error} If there is a problem retrieving the slide layout.
  */
 function getTemplateLayoutId(presentationId, layoutName = null) {
   const layouts = Slides.Presentations.get(presentationId).layouts;
@@ -150,6 +151,7 @@ function getTemplateLayoutId(presentationId, layoutName = null) {
  *
  * @param {string} presentationId Id of the new slide deck that has
  *     been generated
+ * @param {string} [layoutName] The name of the template layout to retrieve.
  * @return {?Layout} Layout object matched by defined name if found or null
  */
 function getTemplateLayout(presentationId, layoutName = null) {
@@ -210,6 +212,9 @@ function appendInsightSlides(deck, insightDeck, insights) {
  * Retrieves the active spreadsheet,removes the current filter if it exists,
  * applies new filter based on criteria, and sorts by a specified column in the
  * trix.
+ *
+ * @param {Sheet} sheet - The sheet to apply the filter and sort to. Defaults to
+ *     the active sheet.
  */
 function filterAndSortData(sheet = undefined) {
   SpreadsheetApp.getActiveSpreadsheet().toast('Filtering and sorting');
@@ -251,18 +256,17 @@ function filterAndSortData(sheet = undefined) {
  *   a page in the presentation. Setting the linking mode as 'LINKED' allows the
  *   chart to be refreshed if the Sheets version is updated.
  * @param {string} presentationId
- * @param {string} pageId
  * @param {string} spreadsheetId
  * @param {string} sheetChartId
+ * @param {string} slidePageId
  * @param {string} slideChartShape
- * @returns {*}
+ * @return {*}
  */
 function replaceSlideShapeWithSheetsChart(
     presentationId, spreadsheetId, sheetChartId, slidePageId, slideChartShape) {
   const chartHeight = slideChartShape.getInherentHeight();
   const chartWidth = slideChartShape.getInherentWidth();
   const chartTransform = slideChartShape.getTransform();
-  const emu4M = {magnitude: 4000000, unit: 'EMU'};
   const presentationChartId = 'chart-test';
   const requests = [{
     createSheetsChart: {
@@ -274,17 +278,17 @@ function replaceSlideShapeWithSheetsChart(
         pageObjectId: slidePageId,
         size: {
           width: {magnitude: chartHeight, unit: 'PT'},
-          height: {magnitude: chartWidth, unit: 'PT'}
+          height: {magnitude: chartWidth, unit: 'PT'},
         },
         transform: {
           scaleX: chartTransform.getScaleX(),
           scaleY: chartTransform.getScaleY(),
           translateX: chartTransform.getTranslateX(),
           translateY: chartTransform.getTranslateY(),
-          unit: 'PT'
-        }
-      }
-    }
+          unit: 'PT',
+        },
+      },
+    },
   }];
 
   // Execute the request.
@@ -299,8 +303,15 @@ function replaceSlideShapeWithSheetsChart(
     console.log('Failed with error: %s', err.error);
     console.log('Failed with error: %s', err);
   }
-};
+}
 
+/**
+ * Gets a function by name.
+ *
+ * @param {string} functionName The name of the function to get.
+ * @return {Function} The function with the given name.
+ * @throws {Error} If the function name is not alphanumeric.
+ */
 function getFunctionByName(functionName) {
   const alphanumericRegex = /^[a-zA-Z0-9]+$/;
   if (!alphanumericRegex.test(functionName)) {
@@ -323,7 +334,8 @@ function createDeckFromDatasources() {
   const newDeckId = createBaseDeck();
 
   const datasourceString = documentProperties.getProperty('DATA_SOURCE_SHEET');
-  const datasourcesArray = datasourceString.split(',').map(item => item.trim());
+  const datasourcesArray =
+      datasourceString.split(',').map((item) => item.trim());
 
   const sectionLayoutName =
       documentProperties.getProperty('SECTION_LAYOUT_NAME');
@@ -348,6 +360,12 @@ function createDeckFromDatasources() {
   applyCustomStyle(newDeckId);
 }
 
+/**
+ * Prepares the dependencies and creates slides for the given datasource.
+ *
+ * @param {string} datasource The name of the datasource.
+ * @param {string} newDeckId The ID of the new deck to create slides in.
+ */
 function prepareDependenciesAndCreateSlides(datasource, newDeckId) {
   const documentProperties = PropertiesService.getDocumentProperties();
   const datasourceConfiguration =

@@ -1,3 +1,5 @@
+/* exported createSlidesUX */
+/* exported parseFieldsAndCreateSlideSustainability */
 /**
  * Google AppScript File
  * @fileoverview Script used in the UX Starter project to automate UX audits.
@@ -44,6 +46,14 @@ function onOpen() {
   spreadsheet.addMenu('Katalyst', menuItems);
 }
 
+/**
+ * Creates a collection of slides from data in a spreadsheet.
+ *
+ * @param {Deck} deck The deck to which the slides will be added.
+ * @param {InsightDeck} insightDeck The insight deck to which the slides will be
+ *     added.
+ * @param {SlideLayout} slideLayout The slide layout to use for the slides.
+ */
 function createSlidesUX(deck, insightDeck, slideLayout) {
   const spreadsheet = SpreadsheetApp.getActive().getSheetByName(
       documentProperties.getProperty('DATA_SOURCE_SHEET'));
@@ -102,8 +112,8 @@ function parseFieldsAndCreateSlide(
                                               row[criteriaImageMockupIndex]);
   const insights = row[criteriaInsightSlidesIndex].split(',');
   const folder = DriveApp.getFileById(SpreadsheetApp.getActive().getId())
-                     .getParents()
-                     .next();
+      .getParents()
+      .next();
   const clientImage = retrieveClientImage(folder, criteriaId);
   createRecommendationSlideGAS(
       deck, recommendationSlideLayout, criteria, applicable, description,
@@ -224,6 +234,19 @@ function applyCustomStyle(newDeckId) {
 
 // ----- Sustainability benchmark
 
+/**
+ * Parses the fields and creates a sustainability slide. This function prepares
+ * the data from the recommendations sheet and builds a chart that is inserted
+ * into the slide. The chart is taken from a sheet specified in the constants.
+ * The slide is appended to the presentation specified by the deck parameter.
+ *
+ * @param {GoogleAppsScript.Slides.Presentation} deck The slide deck to which
+ *     the slide should be appended.
+ * @param {GoogleAppsScript.Slides.Presentation} insightDeck The slide deck that
+ *     contains the insights slides to be used as context.
+ * @param {GoogleAppsScript.Slides.PageElement} slideLayout The layout of the
+ *     slide to be created.
+ */
 function parseFieldsAndCreateSlideSustainability(
     deck, insightDeck, slideLayout) {
   const presentationId = deck.getId();
@@ -250,27 +273,41 @@ function parseFieldsAndCreateSlideSustainability(
       presentationId, spreadsheetId, sheetChartId, slidePageId, slideShape);
 }
 
+/**
+ * Builds the readiness analysis chart based on the recommendations data. This
+ * function is called by parseFieldsAndCreateSlideSustainability and is
+ * responsible for building the chart that is inserted into the slide. It reads
+ * the configuration data from the document properties and uses the
+ * recommendations sheet to calculate the values to be displayed in the chart.
+ *
+ * @param {GoogleAppsScript.Spreadsheet.Sheet} spreadsheet The sheet containing
+ *     the recommendations data.
+ * @param {Array} values The array of values returned by the filter on the
+ *     sheet.
+ * @param {string} chartSheetName The name of the sheet that contains the chart
+ *     to be used.
+ */
 function buildReadinessAnalysis(spreadsheet, values, chartSheetName) {
   const documentProperties = PropertiesService.getDocumentProperties();
   const policyNamesListString =
       documentProperties.getProperty('CATEGORY_NAMES_LIST');
   const policyNamesList =
-      policyNamesListString.split(',').map(item => item.trim());
+      policyNamesListString.split(',').map((item) => item.trim());
   const policyColumnIndex =
       documentProperties.getProperty('POLICY_MAPPING_COLUMN') - 1;
   const policyValuesList = new Array(policyNamesList.length).fill(0);
   const policyTotalList = new Array(policyNamesList.length).fill(0);
 
-  for (let row of values) {
+  for (const row of values) {
     if (!row[policyColumnIndex]) {
       continue;
     }
-    let rowPolicyArray =
-        row[policyColumnIndex].split(',').map(item => item.trim());
-    for (let policyName of rowPolicyArray) {
-      let policyZeroIndex = policyNamesList.indexOf(policyName);
+    const rowPolicyArray =
+        row[policyColumnIndex].split(',').map((item) => item.trim());
+    for (const policyName of rowPolicyArray) {
+      const policyZeroIndex = policyNamesList.indexOf(policyName);
       policyTotalList[policyZeroIndex]++;
-      let rowZeroIndex = values.indexOf(row);
+      const rowZeroIndex = values.indexOf(row);
       if (spreadsheet.isRowHiddenByFilter(rowZeroIndex + 1)) {
         continue;
       }
@@ -283,9 +320,9 @@ function buildReadinessAnalysis(spreadsheet, values, chartSheetName) {
   const totalValuesRange = '\'' + chartSheetName + '\'!' +
       documentProperties.getProperty('TOTAL_RESULTS_RANGE');
   SpreadsheetApp.getActive().getRangeByName(partialValuesRange).setValues([
-    policyValuesList
+    policyValuesList,
   ]);
   SpreadsheetApp.getActive().getRangeByName(totalValuesRange).setValues([
-    policyTotalList
+    policyTotalList,
   ]);
 }
