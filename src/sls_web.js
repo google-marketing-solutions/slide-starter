@@ -42,7 +42,7 @@ function createStarterSlides() {
   loadConfiguration();
   cloneSitesSheet();
   runBatchFromQueue();
-  createDeckFromDatasource();
+  createDeckFromDatasources();
 }
 
 /**

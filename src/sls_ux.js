@@ -2,7 +2,7 @@
  * Google AppScript File
  * @fileoverview Script used in the UX Starter project to automate UX audits.
  *
- * UX Starter V7 - 03/03/23
+ * UX Starter V7 - 04/04/23
  */
 
 // Error messages
@@ -44,33 +44,9 @@ function onOpen() {
   spreadsheet.addMenu('Katalyst', menuItems);
 }
 
-function parseFieldsAndCreateSlideSustainability(deck, insightDeck, slideLayout) {
-  const presentationId = deck.getId();
-  //Preparing the data and adding it into the chart
-  const spreadsheet = SpreadsheetApp.getActive().getSheetByName(
-    documentProperties.getProperty('RECOMMENDATIONS_SHEET'));
-  filterAndSortData(spreadsheet);
-  const values = spreadsheet.getFilter().getRange().getValues();
-  const chartSheetName = documentProperties.getProperty('DATA_SOURCE_SHEET');
-  buildReadinessAnalysis(spreadsheet, values, chartSheetName);
-
-  //Retrieving and inserting the chart
-  const chartSheet = SpreadsheetApp.getActive().getSheetByName(chartSheetName);
-  const spreadsheetId = SpreadsheetApp.getActive().getId();
-  const sheetChartId = chartSheet.getCharts()[0].getChartId();
-  const slide = deck.appendSlide(slideLayout);
-  if (deck.getMasters().length > 1) {
-    deck.getMasters()[deck.getMasters().length - 1].remove();
-  }
-  const slidePageId = slide.getObjectId(); 
-  const slideShape = retrieveShape(slide, 'chart-location');
-  deck.saveAndClose();
-  replaceSlideShapeWithSheetsChart(presentationId, spreadsheetId, sheetChartId, slidePageId, slideShape);
-}
-
 function createSlidesUX(deck, insightDeck, slideLayout) {
   const spreadsheet = SpreadsheetApp.getActive().getSheetByName(
-    documentProperties.getProperty('DATA_SOURCE_SHEET'));
+      documentProperties.getProperty('DATA_SOURCE_SHEET'));
   filterAndSortData();
   const values = spreadsheet.getFilter().getRange().getValues();
   for (let i = 1; i < values.length; i++) {
@@ -97,16 +73,17 @@ function parseFieldsAndCreateSlide(
     deck, insightDeck, recommendationSlideLayout, row) {
   const criteriaIdIndex =
       documentProperties.getProperty('UX_CRITERIA_ID_COLUMN') - 1;
-  const criteriaNameIndex =
-      documentProperties.getProperty('TITLE_COLUMN') - 1;
+  const criteriaNameIndex = documentProperties.getProperty('TITLE_COLUMN') - 1;
   const criteriaAppliesIndex =
       documentProperties.getProperty('SUBTITLE_COLUMN') - 1;
   const criteriaProblemStatementIndex =
-      documentProperties
-          .getProperty('UX_RECOMMENDATIONS_PROBLEM_STATEMENT_ROW') - 1;
+      documentProperties.getProperty(
+          'UX_RECOMMENDATIONS_PROBLEM_STATEMENT_ROW') -
+      1;
   const criteriaSolutionStatementIndex =
-      documentProperties
-          .getProperty('UX_RECOMMENDATIONS_SOLUTION_STATEMENT_ROW') - 1;
+      documentProperties.getProperty(
+          'UX_RECOMMENDATIONS_SOLUTION_STATEMENT_ROW') -
+      1;
   const criteriaImageMockupIndex =
       documentProperties.getProperty('UX_IMAGE_MOCKUP_COLUMN') - 1;
   const criteriaDefaultImageUrl =
@@ -125,7 +102,8 @@ function parseFieldsAndCreateSlide(
                                               row[criteriaImageMockupIndex]);
   const insights = row[criteriaInsightSlidesIndex].split(',');
   const folder = DriveApp.getFileById(SpreadsheetApp.getActive().getId())
-      .getParents().next();
+                     .getParents()
+                     .next();
   const clientImage = retrieveClientImage(folder, criteriaId);
   createRecommendationSlideGAS(
       deck, recommendationSlideLayout, criteria, applicable, description,
@@ -242,4 +220,72 @@ function applyCustomStyle(newDeckId) {
   const endSlideId = documentProperties.getProperty('END_SLIDE_ID');
   const endSlide = insightDeck.getSlideById(endSlideId.trim());
   deck.appendSlide(endSlide, SlidesApp.SlideLinkingMode.NOT_LINKED);
+}
+
+// ----- Sustainability benchmark
+
+function parseFieldsAndCreateSlideSustainability(
+    deck, insightDeck, slideLayout) {
+  const presentationId = deck.getId();
+  // Preparing the data and adding it into the chart
+  const spreadsheet = SpreadsheetApp.getActive().getSheetByName(
+      documentProperties.getProperty('RECOMMENDATIONS_SHEET'));
+  filterAndSortData(spreadsheet);
+  const values = spreadsheet.getFilter().getRange().getValues();
+  const chartSheetName = documentProperties.getProperty('DATA_SOURCE_SHEET');
+  buildReadinessAnalysis(spreadsheet, values, chartSheetName);
+
+  // Retrieving and inserting the chart
+  const chartSheet = SpreadsheetApp.getActive().getSheetByName(chartSheetName);
+  const spreadsheetId = SpreadsheetApp.getActive().getId();
+  const sheetChartId = chartSheet.getCharts()[0].getChartId();
+  const slide = deck.appendSlide(slideLayout);
+  if (deck.getMasters().length > 1) {
+    deck.getMasters()[deck.getMasters().length - 1].remove();
+  }
+  const slidePageId = slide.getObjectId();
+  const slideShape = retrieveShape(slide, 'chart-location');
+  deck.saveAndClose();
+  replaceSlideShapeWithSheetsChart(
+      presentationId, spreadsheetId, sheetChartId, slidePageId, slideShape);
+}
+
+function buildReadinessAnalysis(spreadsheet, values, chartSheetName) {
+  const documentProperties = PropertiesService.getDocumentProperties();
+  const policyNamesListString =
+      documentProperties.getProperty('CATEGORY_NAMES_LIST');
+  const policyNamesList =
+      policyNamesListString.split(',').map(item => item.trim());
+  const policyColumnIndex =
+      documentProperties.getProperty('POLICY_MAPPING_COLUMN') - 1;
+  const policyValuesList = new Array(policyNamesList.length).fill(0);
+  const policyTotalList = new Array(policyNamesList.length).fill(0);
+
+  for (let row of values) {
+    if (!row[policyColumnIndex]) {
+      continue;
+    }
+    let rowPolicyArray =
+        row[policyColumnIndex].split(',').map(item => item.trim());
+    for (let policyName of rowPolicyArray) {
+      let policyZeroIndex = policyNamesList.indexOf(policyName);
+      policyTotalList[policyZeroIndex]++;
+      let rowZeroIndex = values.indexOf(row);
+      if (spreadsheet.isRowHiddenByFilter(rowZeroIndex + 1)) {
+        continue;
+      }
+      policyValuesList[policyZeroIndex]++;
+    }
+  }
+
+  const partialValuesRange = '\'' + chartSheetName + '\'!' +
+      documentProperties.getProperty('PARTIAL_RESULTS_RANGE');
+  const totalValuesRange = '\'' + chartSheetName + '\'!' +
+      documentProperties.getProperty('TOTAL_RESULTS_RANGE');
+  SpreadsheetApp.getActive().getRangeByName(partialValuesRange).setValues([
+    policyValuesList
+  ]);
+  SpreadsheetApp.getActive().getRangeByName(totalValuesRange).setValues([
+    policyTotalList
+  ]);
 }
