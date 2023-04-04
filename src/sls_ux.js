@@ -1,8 +1,10 @@
+/* exported createSlidesUX */
+/* exported parseFieldsAndCreateSlideSustainability */
 /**
  * Google AppScript File
  * @fileoverview Script used in the UX Starter project to automate UX audits.
  *
- * UX Starter V7 - 27/01/23
+ * UX Starter V7 - 04/04/23
  */
 
 // Error messages
@@ -16,8 +18,6 @@
 const WARNING_NO_IMAGES = 'No image found for criteria id ';
 const WARNING_MULTIPLE_IMAGES = 'No image found for criteria id ';
 
-const NUM_PROPERTIES_UX = 16;
-
 /* exported applyCustomStyle */
 /* exported onOpen */
 /* exported parseFieldsAndCreateSlide */
@@ -27,7 +27,7 @@ const NUM_PROPERTIES_UX = 16;
  * custom menu to the spreadsheet.
  */
 function onOpen() {
-  loadConfiguration(NUM_PROPERTIES_UX);
+  loadConfiguration();
   const spreadsheet = SpreadsheetApp.getActive();
   const menuItems = [
     {
@@ -39,12 +39,35 @@ function onOpen() {
       functionName: 'filterAndSortData',
     },
     {
-      name: 'Filter criteria and generate deck',
-      functionName: 'createDeckFromDatasource',
+      name: 'Generate deck',
+      functionName: 'createDeckFromDatasources',
     },
   ];
-  spreadsheet.addMenu('UX Starter', menuItems);
+  spreadsheet.addMenu('Katalyst', menuItems);
 }
+
+/**
+ * Creates a collection of slides from data in a spreadsheet.
+ *
+ * @param {Deck} deck The deck to which the slides will be added.
+ * @param {InsightDeck} insightDeck The insight deck to which the slides will be
+ *     added.
+ * @param {SlideLayout} slideLayout The slide layout to use for the slides.
+ */
+function createSlidesUX(deck, insightDeck, slideLayout) {
+  const spreadsheet = SpreadsheetApp.getActive().getSheetByName(
+      documentProperties.getProperty('DATA_SOURCE_SHEET'));
+  filterAndSortData();
+  const values = spreadsheet.getFilter().getRange().getValues();
+  for (let i = 1; i < values.length; i++) {
+    if (spreadsheet.isRowHiddenByFilter(i + 1)) {
+      continue;
+    }
+    const row = values[i];
+    parseFieldsAndCreateSlide(deck, insightDeck, slideLayout, row);
+  }
+}
+
 
 /**
  * Parses the fields contained on the incoming row from the spreadsheet into
@@ -60,16 +83,17 @@ function parseFieldsAndCreateSlide(
     deck, insightDeck, recommendationSlideLayout, row) {
   const criteriaIdIndex =
       documentProperties.getProperty('UX_CRITERIA_ID_COLUMN') - 1;
-  const criteriaNameIndex =
-      documentProperties.getProperty('TITLE_COLUMN') - 1;
+  const criteriaNameIndex = documentProperties.getProperty('TITLE_COLUMN') - 1;
   const criteriaAppliesIndex =
       documentProperties.getProperty('SUBTITLE_COLUMN') - 1;
   const criteriaProblemStatementIndex =
-      documentProperties
-          .getProperty('UX_RECOMMENDATIONS_PROBLEM_STATEMENT_ROW') - 1;
+      documentProperties.getProperty(
+          'UX_RECOMMENDATIONS_PROBLEM_STATEMENT_ROW') -
+      1;
   const criteriaSolutionStatementIndex =
-      documentProperties
-          .getProperty('UX_RECOMMENDATIONS_SOLUTION_STATEMENT_ROW') - 1;
+      documentProperties.getProperty(
+          'UX_RECOMMENDATIONS_SOLUTION_STATEMENT_ROW') -
+      1;
   const criteriaImageMockupIndex =
       documentProperties.getProperty('UX_IMAGE_MOCKUP_COLUMN') - 1;
   const criteriaDefaultImageUrl =
@@ -88,7 +112,8 @@ function parseFieldsAndCreateSlide(
                                               row[criteriaImageMockupIndex]);
   const insights = row[criteriaInsightSlidesIndex].split(',');
   const folder = DriveApp.getFileById(SpreadsheetApp.getActive().getId())
-      .getParents().next();
+      .getParents()
+      .next();
   const clientImage = retrieveClientImage(folder, criteriaId);
   createRecommendationSlideGAS(
       deck, recommendationSlideLayout, criteria, applicable, description,
@@ -118,6 +143,9 @@ function createRecommendationSlideGAS(
     deck, recommendationSlideLayout, criteria, applicable, description,
     imageMockup, clientImage) {
   const slide = deck.appendSlide(recommendationSlideLayout);
+  if (deck.getMasters().length > 1) {
+    deck.getMasters()[deck.getMasters().length - 1].remove();
+  }
 
   const titlePlaceholder =
       slide.getPlaceholder(SlidesApp.PlaceholderType.TITLE);
@@ -204,3 +232,97 @@ function applyCustomStyle(newDeckId) {
   deck.appendSlide(endSlide, SlidesApp.SlideLinkingMode.NOT_LINKED);
 }
 
+// ----- Sustainability benchmark
+
+/**
+ * Parses the fields and creates a sustainability slide. This function prepares
+ * the data from the recommendations sheet and builds a chart that is inserted
+ * into the slide. The chart is taken from a sheet specified in the constants.
+ * The slide is appended to the presentation specified by the deck parameter.
+ *
+ * @param {GoogleAppsScript.Slides.Presentation} deck The slide deck to which
+ *     the slide should be appended.
+ * @param {GoogleAppsScript.Slides.Presentation} insightDeck The slide deck that
+ *     contains the insights slides to be used as context.
+ * @param {GoogleAppsScript.Slides.PageElement} slideLayout The layout of the
+ *     slide to be created.
+ */
+function parseFieldsAndCreateSlideSustainability(
+    deck, insightDeck, slideLayout) {
+  const presentationId = deck.getId();
+  // Preparing the data and adding it into the chart
+  const spreadsheet = SpreadsheetApp.getActive().getSheetByName(
+      documentProperties.getProperty('RECOMMENDATIONS_SHEET'));
+  filterAndSortData(spreadsheet);
+  const values = spreadsheet.getFilter().getRange().getValues();
+  const chartSheetName = documentProperties.getProperty('DATA_SOURCE_SHEET');
+  buildReadinessAnalysis(spreadsheet, values, chartSheetName);
+
+  // Retrieving and inserting the chart
+  const chartSheet = SpreadsheetApp.getActive().getSheetByName(chartSheetName);
+  const spreadsheetId = SpreadsheetApp.getActive().getId();
+  const sheetChartId = chartSheet.getCharts()[0].getChartId();
+  const slide = deck.appendSlide(slideLayout);
+  if (deck.getMasters().length > 1) {
+    deck.getMasters()[deck.getMasters().length - 1].remove();
+  }
+  const slidePageId = slide.getObjectId();
+  const slideShape = retrieveShape(slide, 'chart-location');
+  deck.saveAndClose();
+  replaceSlideShapeWithSheetsChart(
+      presentationId, spreadsheetId, sheetChartId, slidePageId, slideShape);
+}
+
+/**
+ * Builds the readiness analysis chart based on the recommendations data. This
+ * function is called by parseFieldsAndCreateSlideSustainability and is
+ * responsible for building the chart that is inserted into the slide. It reads
+ * the configuration data from the document properties and uses the
+ * recommendations sheet to calculate the values to be displayed in the chart.
+ *
+ * @param {GoogleAppsScript.Spreadsheet.Sheet} spreadsheet The sheet containing
+ *     the recommendations data.
+ * @param {Array} values The array of values returned by the filter on the
+ *     sheet.
+ * @param {string} chartSheetName The name of the sheet that contains the chart
+ *     to be used.
+ */
+function buildReadinessAnalysis(spreadsheet, values, chartSheetName) {
+  const documentProperties = PropertiesService.getDocumentProperties();
+  const policyNamesListString =
+      documentProperties.getProperty('CATEGORY_NAMES_LIST');
+  const policyNamesList =
+      policyNamesListString.split(',').map((item) => item.trim());
+  const policyColumnIndex =
+      documentProperties.getProperty('POLICY_MAPPING_COLUMN') - 1;
+  const policyValuesList = new Array(policyNamesList.length).fill(0);
+  const policyTotalList = new Array(policyNamesList.length).fill(0);
+
+  for (const row of values) {
+    if (!row[policyColumnIndex]) {
+      continue;
+    }
+    const rowPolicyArray =
+        row[policyColumnIndex].split(',').map((item) => item.trim());
+    for (const policyName of rowPolicyArray) {
+      const policyZeroIndex = policyNamesList.indexOf(policyName);
+      policyTotalList[policyZeroIndex]++;
+      const rowZeroIndex = values.indexOf(row);
+      if (spreadsheet.isRowHiddenByFilter(rowZeroIndex + 1)) {
+        continue;
+      }
+      policyValuesList[policyZeroIndex]++;
+    }
+  }
+
+  const partialValuesRange = '\'' + chartSheetName + '\'!' +
+      documentProperties.getProperty('PARTIAL_RESULTS_RANGE');
+  const totalValuesRange = '\'' + chartSheetName + '\'!' +
+      documentProperties.getProperty('TOTAL_RESULTS_RANGE');
+  SpreadsheetApp.getActive().getRangeByName(partialValuesRange).setValues([
+    policyValuesList,
+  ]);
+  SpreadsheetApp.getActive().getRangeByName(totalValuesRange).setValues([
+    policyTotalList,
+  ]);
+}

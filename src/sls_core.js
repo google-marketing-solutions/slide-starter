@@ -1,6 +1,7 @@
 /* exported retrieveShape */
 /* exported appendInsightSlides */
-/* exported createDeckFromDatasource */
+/* exported createDeckFromDatasources */
+/* exported replaceSlideShapeWithSheetsChart*/
 /**
  * Google AppScript File
  * @fileoverview Includes the core shared functions between the different
@@ -27,18 +28,15 @@
  *   Helper function to retrieve a specific shape within a slide deck based on
  *   a string
  *
- * 27/01/23
+ * 04/04/23
  */
 
 // Error messages
-const ERROR_MISSING_PROPERTY =
-    'There\'s a missing property from the configuration.';
 const ERROR_MISSING_RANGE = 'Couldn\'t find the named range in Configuration.';
 const ERROR_NO_SHAPE = 'There was a problem retrieving the shape layout.';
 
 // Properties configuration
 const RANGE_NAME = 'Configuration!PROPERTIES';
-const NUM_PROPERTIES = 16;
 
 // Document properties
 const documentProperties = PropertiesService.getDocumentProperties();
@@ -48,17 +46,14 @@ const documentProperties = PropertiesService.getDocumentProperties();
  * active spreadsheet and maps them to the document properties using
  * the properties service.
  *
- * @param {number} properties Number of properties to be expected
+ * @param {string} rangeName Optional name of the range to use
  */
-function loadConfiguration(properties = NUM_PROPERTIES) {
-  const range = SpreadsheetApp.getActive().getRangeByName(RANGE_NAME);
+function loadConfiguration(rangeName = RANGE_NAME) {
+  const range = SpreadsheetApp.getActive().getRangeByName(rangeName);
   if (!range) {
     throw new Error(ERROR_MISSING_RANGE);
   }
   const values = range.getValues();
-  if (values.length < properties) {
-    throw new Error(ERROR_MISSING_PROPERTY);
-  }
   for (const value of values) {
     documentProperties.setProperty(value[0], String(value[1]));
   }
@@ -84,6 +79,23 @@ function createBaseDeck() {
       .makeCopy(
           documentProperties.getProperty('OUTPUT_DECK_NAME'), parentFolder)
       .getId();
+}
+
+/**
+ * Creates a subsection header slide within a specified deck
+ * and appends it.
+ *
+ * @param {string} deckId Object identifier for the slide deck
+ * @param {!Layout} layout Layout object relative to the header slide
+ * @param {string} title Name of the section of the audit
+ */
+function createHeaderSlide(deckId, layout, title) {
+  const deck = SlidesApp.openById(deckId);
+  const slide = deck.appendSlide(layout);
+  const titlePlaceholder =
+      slide.getPlaceholder(SlidesApp.PlaceholderType.TITLE);
+  const titleRange = titlePlaceholder.asShape().getText();
+  titleRange.setText(title);
 }
 
 /**
@@ -114,15 +126,18 @@ function customDataInjection(newDeckId) {
  * returns the correct one once it has found a match. This function assumes that
  * the base template contains the layout name as specified on the constants.
  *
- * @param {string} presentationId Id of the new slide deck that has
- *     been generated
- * @return {string} Id of the layout matched by defined name
+ * @param {string} presentationId The ID of the new slide deck that has been
+ *  generated.
+ * @param {string=} layoutName (optional) The name of the layout to match.
+ * @return {string} The ID of the layout matched by the defined name.
+ * @throws {Error} If there is a problem retrieving the slide layout.
  */
-function getTemplateLayoutId(presentationId) {
+function getTemplateLayoutId(presentationId, layoutName = null) {
   const layouts = Slides.Presentations.get(presentationId).layouts;
+  const nameToMatch =
+      layoutName ? layoutName : documentProperties.getProperty('LAYOUT_NAME');
   for (const layout of layouts) {
-    if (layout.layoutProperties.displayName ===
-        documentProperties.getProperty('LAYOUT_NAME')) {
+    if (layout.layoutProperties.displayName === nameToMatch) {
       return layout.objectId;
     }
   }
@@ -136,11 +151,12 @@ function getTemplateLayoutId(presentationId) {
  *
  * @param {string} presentationId Id of the new slide deck that has
  *     been generated
+ * @param {string} [layoutName] The name of the template layout to retrieve.
  * @return {?Layout} Layout object matched by defined name if found or null
  */
-function getTemplateLayout(presentationId) {
+function getTemplateLayout(presentationId, layoutName = null) {
   const layouts = SlidesApp.openById(presentationId).getLayouts();
-  const layoutId = getTemplateLayoutId(presentationId);
+  const layoutId = getTemplateLayoutId(presentationId, layoutName);
   for (const layout of layouts) {
     if (layout.getObjectId() === layoutId) {
       return layout;
@@ -196,12 +212,17 @@ function appendInsightSlides(deck, insightDeck, insights) {
  * Retrieves the active spreadsheet,removes the current filter if it exists,
  * applies new filter based on criteria, and sorts by a specified column in the
  * trix.
+ *
+ * @param {Sheet} sheet - The sheet to apply the filter and sort to. Defaults to
+ *     the active sheet.
  */
-function filterAndSortData() {
+function filterAndSortData(sheet = undefined) {
   SpreadsheetApp.getActiveSpreadsheet().toast('Filtering and sorting');
   const documentProperties = PropertiesService.getDocumentProperties();
-  const sheet = SpreadsheetApp.getActive().getSheetByName(
-      documentProperties.getProperty('DATA_SOURCE_SHEET'));
+  if (!sheet) {
+    sheet = SpreadsheetApp.getActive().getSheetByName(
+        documentProperties.getProperty('DATA_SOURCE_SHEET'));
+  }
 
   const lastRow = sheet.getLastRow();
   const lastColumn = sheet.getLastColumn();
@@ -217,51 +238,202 @@ function filterAndSortData() {
   }
 
   const filter = sheet.getRange(1, 1, lastRow, lastColumn).createFilter();
-  const failingFilterCriteria =
-      SpreadsheetApp.newFilterCriteria().whenTextContains(
-          documentProperties.getProperty('FILTER_TEXT_VALUE'));
-  filter.sort(documentProperties.getProperty('SORTING_COLUMN'), sortingOrder)
-      .setColumnFilterCriteria(
-          documentProperties.getProperty('FILTER_COLUMN'),
-          failingFilterCriteria);
+  const filterColumn = documentProperties.getProperty('FILTER_COLUMN');
+  if (filterColumn && filterColumn.length > 0) {
+    const failingFilterCriteria =
+        SpreadsheetApp.newFilterCriteria().whenTextContains(
+            documentProperties.getProperty('FILTER_TEXT_VALUE'));
+    filter.sort(documentProperties.getProperty('SORTING_COLUMN'), sortingOrder)
+        .setColumnFilterCriteria(
+            documentProperties.getProperty('FILTER_COLUMN'),
+            failingFilterCriteria);
+  }
+}
+
+
+/**
+ * Embed a Sheets chart (indicated by the spreadsheetId and sheetChartId) onto
+ *   a page in the presentation. Setting the linking mode as 'LINKED' allows the
+ *   chart to be refreshed if the Sheets version is updated.
+ * @param {string} presentationId
+ * @param {string} spreadsheetId
+ * @param {string} sheetChartId
+ * @param {string} slidePageId
+ * @param {string} slideChartShape
+ * @return {*}
+ */
+function replaceSlideShapeWithSheetsChart(
+    presentationId, spreadsheetId, sheetChartId, slidePageId, slideChartShape) {
+  const chartHeight = slideChartShape.getInherentHeight();
+  const chartWidth = slideChartShape.getInherentWidth();
+  const chartTransform = slideChartShape.getTransform();
+  const presentationChartId = 'chart-test';
+  const requests = [{
+    createSheetsChart: {
+      objectId: presentationChartId,
+      spreadsheetId: spreadsheetId,
+      chartId: sheetChartId,
+      linkingMode: 'LINKED',
+      elementProperties: {
+        pageObjectId: slidePageId,
+        size: {
+          width: {magnitude: chartHeight, unit: 'PT'},
+          height: {magnitude: chartWidth, unit: 'PT'},
+        },
+        transform: {
+          scaleX: chartTransform.getScaleX(),
+          scaleY: chartTransform.getScaleY(),
+          translateX: chartTransform.getTranslateX(),
+          translateY: chartTransform.getTranslateY(),
+          unit: 'PT',
+        },
+      },
+    },
+  }];
+
+  // Execute the request.
+  try {
+    const batchUpdateResponse =
+        Slides.Presentations.batchUpdate({requests: requests}, presentationId);
+    console.log('Added a linked Sheets chart with ID: %s', presentationChartId);
+    slideChartShape.remove();
+    return batchUpdateResponse;
+  } catch (err) {
+    // TODO (Developer) - Handle exception
+    console.log('Failed with error: %s', err.error);
+    console.log('Failed with error: %s', err);
+  }
 }
 
 /**
- * Creates a presentation based on a set of recommendations included in a
- * spreadsheet. For this, it creates a copy of a base deck, it retrieves the
- * correct template, it filters and sorts the recommendations and it creates
- * a slide operation request for each row that wasn't hidden by the filter
- * excluding the header row.
+ * Gets a function by name.
+ *
+ * @param {string} functionName The name of the function to get.
+ * @return {Function} The function with the given name.
+ * @throws {Error} If the function name is not alphanumeric.
  */
-function createDeckFromDatasource() {
-  loadConfiguration();
-  filterAndSortData();
-  const documentProperties = PropertiesService.getDocumentProperties();
-  const spreadsheet = SpreadsheetApp.getActive().getSheetByName(
-      documentProperties.getProperty('DATA_SOURCE_SHEET'));
-  const values = spreadsheet.getFilter().getRange().getValues();
+function getFunctionByName(functionName) {
+  const alphanumericRegex = /^[a-zA-Z0-9]+$/;
+  if (!alphanumericRegex.test(functionName)) {
+    throw new Error('Function name not alphanumeric');
+  }
+  return new Function(`return ${functionName};`)();
+}
 
-  // TODO: Check if there are no sorted recommendations as part of that, and
-  // stop the process. The problem with this is that there's no way to quickly
-  // obtain the amount of results filtered
+// --- Katalyst loops
+
+/**
+ * Creates a new Slides deck based on the data sources specified in the document
+ * properties. Uses the specified base deck as a template, and applies custom
+ * styling to the new deck.
+ */
+function createDeckFromDatasources() {
+  const documentProperties = PropertiesService.getDocumentProperties();
+  loadConfiguration();
 
   const newDeckId = createBaseDeck();
-  const recommendationSlideLayout = getTemplateLayout(newDeckId);
+
+  const datasourceString = documentProperties.getProperty('DATA_SOURCE_SHEET');
+  const datasourcesArray =
+      datasourceString.split(',').map((item) => item.trim());
+
+  const sectionLayoutName =
+      documentProperties.getProperty('SECTION_LAYOUT_NAME');
+  let sectionLayout;
+  if (sectionLayoutName && sectionLayoutName.length > 0) {
+    sectionLayout = getTemplateLayout(newDeckId, sectionLayoutName);
+  }
+
+  for (const datasource of datasourcesArray) {
+    if (sectionLayout) {
+      createHeaderSlide(deckId, sectionLayout, datasource);
+    }
+    prepareDependenciesAndCreateSlides(datasource, newDeckId);
+  }
+
+  const dictionarySheetName =
+      documentProperties.getProperty('DICTIONARY_SHEET_NAME');
+  if (dictionarySheetName && dictionarySheetName.length > 0) {
+    customDataInjection(newDeckId);
+  }
+
+  applyCustomStyle(newDeckId);
+}
+
+/**
+ * Prepares the dependencies and creates slides for the given datasource.
+ *
+ * @param {string} datasource The name of the datasource.
+ * @param {string} newDeckId The ID of the new deck to create slides in.
+ */
+function prepareDependenciesAndCreateSlides(datasource, newDeckId) {
+  const documentProperties = PropertiesService.getDocumentProperties();
+  const datasourceConfiguration =
+      '\'Configuration_' + datasource + '\'!PROPERTIES';
+  loadConfiguration(datasourceConfiguration);
 
   const deck = SlidesApp.openById(newDeckId);
-  const insightDeck =
-      SlidesApp.openById(documentProperties.getProperty('INSIGHTS_DECK_ID'));
+  const recommendationSlideLayout = getTemplateLayout(newDeckId);
 
+  let insightDeck;
+  const insightsDeckId = documentProperties.getProperty('INSIGHTS_DECK_ID');
+  if (insightsDeckId && insightsDeckId.length > 0) {
+    insightDeck =
+        SlidesApp.openById(documentProperties.getProperty('INSIGHTS_DECK_ID'));
+  }
+
+  createSlidesForDatasource(deck, insightDeck, recommendationSlideLayout);
+}
+
+/**
+ * If a custom function is specified in the configuration tab, the custom
+ * function is called instead. Otherwise t creates either a single slide or a
+ * collection slide based on the check in config.
+ *
+ * @param {Presentation} deck - The Slides deck where the new slide(s) will be
+ *     created.
+ * @param {Presentation} insightDeck - Extra deck to pull insight slides,
+ *     retrieved only once.
+ * @param {Layout} slideLayout - The slide layout to use for the new slide(s).
+ *
+ */
+function createSlidesForDatasource(deck, insightDeck, slideLayout) {
+  const customFunctionName = documentProperties.getProperty('CUSTOM_FUNCTION');
+  if (customFunctionName && customFunctionName.length > 0) {
+    getFunctionByName(customFunctionName)(deck, insightDeck, slideLayout);
+  } else {
+    const isSingleSlide =
+        documentProperties.getProperty('SINGLE_VALUE') == 'TRUE';
+    if (isSingleSlide) {
+      createSingleSlide(deck, insightDeck, slideLayout);
+    } else {
+      createCollectionSlide(deck, insightDeck, slideLayout);
+    }
+  }
+}
+
+/**
+ * Creates a collection slide based on data from a Google Sheets data source
+ * using the specified deck, insight deck, and slide layout. Filters and sorts
+ * the data, and creates a slide for each row that passes the filter criteria.
+ *
+ * @param {Presentation} deck - The Slides deck where the new slide(s) will be
+ *     created.
+ * @param {Presentation} insightDeck - The Slides deck where the insight slide
+ *     will be created (if applicable).
+ * @param {Layout} slideLayout - The slide layout to use for the new slide(s).
+ *
+ */
+function createCollectionSlide(deck, insightDeck, slideLayout) {
+  const spreadsheet = SpreadsheetApp.getActive().getSheetByName(
+      documentProperties.getProperty('DATA_SOURCE_SHEET'));
+  filterAndSortData();
+  const values = spreadsheet.getFilter().getRange().getValues();
   for (let i = 1; i < values.length; i++) {
     if (spreadsheet.isRowHiddenByFilter(i + 1)) {
       continue;
     }
     const row = values[i];
-    parseFieldsAndCreateSlide(
-        deck, insightDeck, recommendationSlideLayout, row);
+    parseFieldsAndCreateCollectionSlide(deck, insightDeck, slideLayout, row);
   }
-
-  customDataInjection(newDeckId);
-  applyCustomStyle(newDeckId);
 }
-
