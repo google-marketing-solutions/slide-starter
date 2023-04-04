@@ -245,103 +245,6 @@ function filterAndSortData(sheet = undefined) {
   }
 }
 
-/**
- * Creates a presentation based on a set of rows of data included in a
- * spreadsheet. For this, it creates a copy of a base deck, it retrieves the
- * correct template, it filters and sorts the recommendations and it creates
- * a slide operation request for each row that wasn't hidden by the filter
- * excluding the header row.
- */
-function createDeckFromDatasource() {
-  const documentProperties = PropertiesService.getDocumentProperties();
-  loadConfiguration();
-  filterAndSortData();
-
-  const spreadsheet = SpreadsheetApp.getActive().getSheetByName(
-      documentProperties.getProperty('DATA_SOURCE_SHEET'));
-  const values = spreadsheet.getFilter().getRange().getValues();
-
-  const newDeckId = createBaseDeck();
-  const deck = SlidesApp.openById(newDeckId);
-  const recommendationSlideLayout = getTemplateLayout(newDeckId);
-
-  let insightDeck;
-  const insightsDeckId = documentProperties.getProperty('INSIGHTS_DECK_ID');
-  if (insightsDeckId && insightsDeckId.length > 0) {
-    insightDeck =
-        SlidesApp.openById(documentProperties.getProperty('INSIGHTS_DECK_ID'));
-  }
-
-  for (let i = 1; i < values.length; i++) {
-    if (spreadsheet.isRowHiddenByFilter(i + 1)) {
-      continue;
-    }
-    const row = values[i];
-    parseFieldsAndCreateSlide(
-        deck, insightDeck, recommendationSlideLayout, row);
-  }
-
-  const dictionarySheetName =
-      documentProperties.getProperty('DICTIONARY_SHEET_NAME');
-  if (dictionarySheetName && dictionarySheetName.length > 0) {
-    customDataInjection(newDeckId);
-  }
-
-  applyCustomStyle(newDeckId);
-}
-
-/**
- * 
- */
-function createDeckFromDatasources() {
-  const documentProperties = PropertiesService.getDocumentProperties();
-  loadConfiguration();
-
-  const newDeckId = createBaseDeck();
-
-  const datasourceString = documentProperties.getProperty('DATA_SOURCE_SHEET');
-  const datasourcesArray = datasourceString.split(',').map( item => item.trim());
-
-  const sectionLayoutName =  documentProperties.getProperty('SECTION_LAYOUT_NAME');
-  let sectionLayout;
-  if (sectionLayoutName && sectionLayoutName.length > 0) {
-     sectionLayout = getTemplateLayout(newDeckId, sectionLayoutName);
-  }
-
-  for (const datasource of datasourcesArray) {
-    if (sectionLayout) {
-      createHeaderSlide(deckId, sectionLayout, datasource);
-    }
-    prepareDependenciesAndCreateSlides(datasource, newDeckId);
-  }
-
-  const dictionarySheetName =
-      documentProperties.getProperty('DICTIONARY_SHEET_NAME');
-  if (dictionarySheetName && dictionarySheetName.length > 0) {
-    customDataInjection(newDeckId);
-  }
-
-  applyCustomStyle(newDeckId);
-}
-
-function prepareDependenciesAndCreateSlides(datasource, newDeckId) {
-  const documentProperties = PropertiesService.getDocumentProperties();
-  const datasourceConfiguration = "'Configuration_" + datasource + "'!PROPERTIES";
-  loadConfiguration(datasourceConfiguration);
-
-  const deck = SlidesApp.openById(newDeckId);
-  const recommendationSlideLayout = getTemplateLayout(newDeckId);
-
-  let insightDeck;
-  const insightsDeckId = documentProperties.getProperty('INSIGHTS_DECK_ID');
-  if (insightsDeckId && insightsDeckId.length > 0) {
-    insightDeck =
-        SlidesApp.openById(documentProperties.getProperty('INSIGHTS_DECK_ID'));
-  }
-
-  createSlidesForDatasource(
-    datasource, deck, insightDeck, recommendationSlideLayout);
-}
 
 /**
  * Embed a Sheets chart (indicated by the spreadsheetId and sheetChartId) onto
@@ -406,3 +309,79 @@ function replaceSlideShapeWithSheetsChart(presentationId, spreadsheetId, sheetCh
     console.log('Failed with error: %s', err);
   }
 };
+
+
+// --- Katalyst loops
+
+/**
+ * 
+ */
+function createDeckFromDatasources() {
+  const documentProperties = PropertiesService.getDocumentProperties();
+  loadConfiguration();
+
+  const newDeckId = createBaseDeck();
+
+  const datasourceString = documentProperties.getProperty('DATA_SOURCE_SHEET');
+  const datasourcesArray = datasourceString.split(',').map( item => item.trim());
+
+  const sectionLayoutName =  documentProperties.getProperty('SECTION_LAYOUT_NAME');
+  let sectionLayout;
+  if (sectionLayoutName && sectionLayoutName.length > 0) {
+     sectionLayout = getTemplateLayout(newDeckId, sectionLayoutName);
+  }
+
+  for (const datasource of datasourcesArray) {
+    if (sectionLayout) {
+      createHeaderSlide(deckId, sectionLayout, datasource);
+    }
+    prepareDependenciesAndCreateSlides(datasource, newDeckId);
+  }
+
+  const dictionarySheetName =
+      documentProperties.getProperty('DICTIONARY_SHEET_NAME');
+  if (dictionarySheetName && dictionarySheetName.length > 0) {
+    customDataInjection(newDeckId);
+  }
+
+  applyCustomStyle(newDeckId);
+}
+
+function prepareDependenciesAndCreateSlides(datasource, newDeckId) {
+  const documentProperties = PropertiesService.getDocumentProperties();
+  const datasourceConfiguration = "'Configuration_" + datasource + "'!PROPERTIES";
+  loadConfiguration(datasourceConfiguration);
+
+  const deck = SlidesApp.openById(newDeckId);
+  const recommendationSlideLayout = getTemplateLayout(newDeckId);
+
+  let insightDeck;
+  const insightsDeckId = documentProperties.getProperty('INSIGHTS_DECK_ID');
+  if (insightsDeckId && insightsDeckId.length > 0) {
+    insightDeck =
+        SlidesApp.openById(documentProperties.getProperty('INSIGHTS_DECK_ID'));
+  }
+
+  createSlidesForDatasource(
+    datasource, deck, insightDeck, recommendationSlideLayout);
+}
+
+function createSlidesForDatasource(
+  datasource, deck, insightDeck, slideLayout) {
+    const customParsingFunctionName = documentProperties.getProperty('CHANGEME');
+    if (customParsingFunctionName && customParsingFunctionName.length > 0) {
+      //Do map stuff
+    } else {
+      const spreadsheet = SpreadsheetApp.getActive().getSheetByName(
+        documentProperties.getProperty('DATA_SOURCE_SHEET'));
+      filterAndSortData();
+      const values = spreadsheet.getFilter().getRange().getValues();
+      for (let i = 1; i < values.length; i++) {
+        if (spreadsheet.isRowHiddenByFilter(i + 1)) {
+          continue;
+        }
+        const row = values[i];
+        parseFieldsAndCreateSlide(deck, insightDeck, slideLayout, row);
+      }
+    }
+}
