@@ -44,7 +44,7 @@ function onOpen() {
   spreadsheet.addMenu('Katalyst', menuItems);
 }
 
-function parseFieldsAndCreateSlideSustainability(datasource, deck, slideLayout) {
+function parseFieldsAndCreateSlideSustainability(deck, insightDeck, slideLayout) {
   const presentationId = deck.getId();
   //Preparing the data and adding it into the chart
   const spreadsheet = SpreadsheetApp.getActive().getSheetByName(
@@ -67,6 +67,21 @@ function parseFieldsAndCreateSlideSustainability(datasource, deck, slideLayout) 
   deck.saveAndClose();
   replaceSlideShapeWithSheetsChart(presentationId, spreadsheetId, sheetChartId, slidePageId, slideShape);
 }
+
+function createSlidesUX(deck, insightDeck, slideLayout) {
+  const spreadsheet = SpreadsheetApp.getActive().getSheetByName(
+    documentProperties.getProperty('DATA_SOURCE_SHEET'));
+  filterAndSortData();
+  const values = spreadsheet.getFilter().getRange().getValues();
+  for (let i = 1; i < values.length; i++) {
+    if (spreadsheet.isRowHiddenByFilter(i + 1)) {
+      continue;
+    }
+    const row = values[i];
+    parseFieldsAndCreateSlide(deck, insightDeck, slideLayout, row);
+  }
+}
+
 
 /**
  * Parses the fields contained on the incoming row from the spreadsheet into

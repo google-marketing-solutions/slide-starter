@@ -309,6 +309,13 @@ function replaceSlideShapeWithSheetsChart(presentationId, spreadsheetId, sheetCh
   }
 };
 
+function getFunctionByName(functionName) {
+  const alphanumericRegex = /^[a-zA-Z0-9]+$/;
+  if (!alphanumericRegex.test(functionName)) {
+    throw new Error('Function name not alphanumeric');
+  }
+  return new Function(`return ${functionName};`)();
+}
 
 // --- Katalyst loops
 
@@ -365,21 +372,49 @@ function prepareDependenciesAndCreateSlides(datasource, newDeckId) {
     datasource, deck, insightDeck, recommendationSlideLayout);
 }
 
+/**
+ * Creates slides for a given data source using the specified deck, insight deck, and slide layout.
+ * If a custom function is specified in the configuration tab, the custom function is called instead.
+ * Otherwise t creates either a single slide or a collection slide based on the check in config.
+ *
+ * @param {Presentation} deck - The Slides deck where the new slide(s) will be created.
+ * @param {Presentation} insightDeck - Extra deck to pull insight slides, retrieved only once.
+ * @param {Layout} slideLayout - The slide layout to use for the new slide(s).
+ *
+ */
 function createSlidesForDatasource(deck, insightDeck, slideLayout) {
-    const customParsingFunctionName = documentProperties.getProperty('CHANGEME');
-    if (customParsingFunctionName && customParsingFunctionName.length > 0) {
-      //Do map stuff
+    const customFunctionName = documentProperties.getProperty('CUSTOM_FUNCTION');
+    if (customFunctionName && customFunctionName.length > 0) {
+      getFunctionByName(customFunctionName)();
     } else {
-      const spreadsheet = SpreadsheetApp.getActive().getSheetByName(
-        documentProperties.getProperty('DATA_SOURCE_SHEET'));
-      filterAndSortData();
-      const values = spreadsheet.getFilter().getRange().getValues();
-      for (let i = 1; i < values.length; i++) {
-        if (spreadsheet.isRowHiddenByFilter(i + 1)) {
-          continue;
-        }
-        const row = values[i];
-        parseFieldsAndCreateSlide(deck, insightDeck, slideLayout, row);
+      const isSingleSlide = documentProperties.getProperty('SINGLE_VALUE') == 'TRUE';
+      if (isSingleSlide) {
+        createSingleSlide(deck, insightDeck, slideLayout);
+      } else {
+        createCollectionSlide(deck, insightDeck, slideLayout);
       }
     }
+}
+
+/**
+ * Creates a collection slide based on data from a Google Sheets data source using the specified deck, insight deck, and slide layout.
+ * Filters and sorts the data, and creates a slide for each row that passes the filter criteria.
+ *
+ * @param {Presentation} deck - The Slides deck where the new slide(s) will be created.
+ * @param {Presentation} insightDeck - The Slides deck where the insight slide will be created (if applicable).
+ * @param {Layout} slideLayout - The slide layout to use for the new slide(s).
+ *
+ */
+function createCollectionSlide(deck, insightDeck, slideLayout) {
+  const spreadsheet = SpreadsheetApp.getActive().getSheetByName(
+    documentProperties.getProperty('DATA_SOURCE_SHEET'));
+  filterAndSortData();
+  const values = spreadsheet.getFilter().getRange().getValues();
+  for (let i = 1; i < values.length; i++) {
+    if (spreadsheet.isRowHiddenByFilter(i + 1)) {
+      continue;
+    }
+    const row = values[i];
+    parseFieldsAndCreateCollectionSlide(deck, insightDeck, slideLayout, row);
+  }
 }
