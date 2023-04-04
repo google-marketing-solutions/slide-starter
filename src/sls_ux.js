@@ -44,29 +44,6 @@ function onOpen() {
   spreadsheet.addMenu('Katalyst', menuItems);
 }
 
-
-function createSlidesForDatasource(
-  datasource, deck, insightDeck, slideLayout) {
-  switch (datasource) {
-    case 'Sustainable benchmark':
-      parseFieldsAndCreateSlideSustainability(datasource, deck, slideLayout);
-      break;
-    default:
-      const spreadsheet = SpreadsheetApp.getActive().getSheetByName(
-        documentProperties.getProperty('DATA_SOURCE_SHEET'));
-      filterAndSortData();
-      const values = spreadsheet.getFilter().getRange().getValues();
-      for (let i = 1; i < values.length; i++) {
-        if (spreadsheet.isRowHiddenByFilter(i + 1)) {
-          continue;
-        }
-        const row = values[i];
-        parseFieldsAndCreateSlide(deck, insightDeck, slideLayout, row);
-      }
-      break;
-  }
-}
-
 function parseFieldsAndCreateSlideSustainability(datasource, deck, slideLayout) {
   const presentationId = deck.getId();
   //Preparing the data and adding it into the chart

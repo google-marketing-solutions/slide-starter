@@ -365,8 +365,7 @@ function prepareDependenciesAndCreateSlides(datasource, newDeckId) {
     datasource, deck, insightDeck, recommendationSlideLayout);
 }
 
-function createSlidesForDatasource(
-  datasource, deck, insightDeck, slideLayout) {
+function createSlidesForDatasource(deck, insightDeck, slideLayout) {
     const customParsingFunctionName = documentProperties.getProperty('CHANGEME');
     if (customParsingFunctionName && customParsingFunctionName.length > 0) {
       //Do map stuff
