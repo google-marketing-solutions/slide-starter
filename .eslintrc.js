@@ -1,6 +1,6 @@
 module.exports = {
   ignorePatterns: ['test/Core.spec.ts'],
-  extends: ["eslint:recommended", "google"],
+  extends: ['eslint:recommended', 'google'],
   env: {
     browser: true,
     es2021: true,
@@ -9,9 +9,9 @@ module.exports = {
   },
   overrides: [],
   parserOptions: {
-    ecmaVersion: "latest",
+    ecmaVersion: 'latest',
   },
   rules: {
-    "no-undef": "off",
+    'no-undef': 'off',
   },
 };
