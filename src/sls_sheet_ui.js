@@ -5,6 +5,9 @@
 /* exported uploadFile */
 /* exported sheetUI */
 
+/**
+ * Add menu items for helpful UI.
+ */
 function sheetUI() {
   SpreadsheetApp.getUi()
         .createMenu('Wizard')
@@ -12,11 +15,19 @@ function sheetUI() {
         .addToUi();
 }
 
+/**
+ * Present HTML file Upload form.
+ */
 function openUploadDialog() {
   var html = HtmlService.createHtmlOutputFromFile('upload');
   SpreadsheetApp.getUi().showModalDialog(html, 'Upload File to Images folder');
 }
 
+/**
+ * Hand image file upload via a base64 encoded data string.
+ * @param {string} data 
+ * @param {string} type 
+ */
 function uploadFile(data, type) {
   const thisFileId = SpreadsheetApp.getActive().getId();
   const thisFile = DriveApp.getFileById(thisFileId);
@@ -24,7 +35,7 @@ function uploadFile(data, type) {
   const parents = thisFile.getParents();
   let f;
   while (parents.hasNext()) {
-    f = parents.next(); //f is a single 2020 folder.
+    f = parents.next();
   }
   const imagesFolders = f.getFoldersByName('Images');
   let imageFolder;
