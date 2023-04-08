@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+  </head>
+  <body>
+    <form id="fileform" onsubmit="event.preventDefault()">
+      <input type="file" id="file" name="fileToUpload">
+      <input type="Button" value="Upload" onclick="uploadthis(this.parentNode)">
+    </form>
+    <script>
+      function uploadthis(frmData) {
+
+        var file = frmData.fileToUpload.files[0];
+        var reader = new FileReader();
+
+        reader.onload = function(e) {
+          console.log(e.target.result);
+      
+          google.script.run.uploadFile(e.target.result, file.type, file.name)
+
+      };
+      reader.readAsDataURL(file);
+      }
+
+      function closeDialog() {
+        google.script.host.close()
+      }
+
+      function alertFailure(error) {
+        google.script.host.close()
+        alert("failed Upload" + error.message)
+      }
+    </script>
+
+  </body>
+</html>

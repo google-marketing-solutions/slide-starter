@@ -30,6 +30,7 @@ function onOpen() {
       },
     ];
     spreadsheet.addMenu('Performance Starter', menuItems);
+    SheetUI();
   } catch (error) {
     throw new Error('onOpen failed: ' + error.toString());
   }
