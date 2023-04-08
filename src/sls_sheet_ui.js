@@ -3,6 +3,7 @@
  */
 
 /* exported uploadFile */
+/* exported openUploadDialog */
 /* exported sheetUI */
 
 /**
@@ -10,23 +11,23 @@
  */
 function sheetUI() {
   SpreadsheetApp.getUi()
-        .createMenu('Wizard')
-        .addItem('Upload', 'openUploadDialog')
-        .addToUi();
+      .createMenu('Wizard')
+      .addItem('Upload', 'openUploadDialog')
+      .addToUi();
 }
 
 /**
  * Present HTML file Upload form.
  */
 function openUploadDialog() {
-  var html = HtmlService.createHtmlOutputFromFile('upload');
+  const html = HtmlService.createHtmlOutputFromFile('upload');
   SpreadsheetApp.getUi().showModalDialog(html, 'Upload File to Images folder');
 }
 
 /**
  * Hand image file upload via a base64 encoded data string.
- * @param {string} data 
- * @param {string} type 
+ * @param {string} data
+ * @param {string} type
  */
 function uploadFile(data, type) {
   const thisFileId = SpreadsheetApp.getActive().getId();
@@ -45,8 +46,8 @@ function uploadFile(data, type) {
     imageFolder = imagesFolders.next();
   }
   const imageBlob = Utilities.newBlob(
-    Utilities.base64Decode(data.split(',')[1]),
-    type
+      Utilities.base64Decode(data.split(',')[1]),
+      type,
   );
   const fileName = SpreadsheetApp.getActiveSheet().getActiveCell().getValue();
   imageBlob.setName(fileName);
