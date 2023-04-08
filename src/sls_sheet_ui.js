@@ -50,5 +50,5 @@ function uploadFile(data, type) {
   );
   const fileName = SpreadsheetApp.getActiveSheet().getActiveCell().getValue();
   imageBlob.setName(fileName);
-  const newFile = imageFolder.createFile(imageBlob);
+  imageFolder.createFile(imageBlob);
 }
