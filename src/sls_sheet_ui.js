@@ -6,14 +6,16 @@
 /* exported openUploadDialog */
 /* exported sheetUI */
 
+const ERROR_MISSING_VALUE = 'Selected cell was empty. Please select a cell with a string value.';
+
 /**
  * Add menu items for helpful UI.
  */
 function sheetUI() {
   SpreadsheetApp.getUi()
-      .createMenu('Wizard')
-      .addItem('Upload', 'openUploadDialog')
-      .addToUi();
+    .createMenu('Wizard')
+    .addItem('Upload', 'openUploadDialog')
+    .addToUi();
 }
 
 /**
@@ -30,26 +32,34 @@ function openUploadDialog() {
  * @param {string} type
  */
 function uploadFile(data, type) {
-  const thisFileId = SpreadsheetApp.getActive().getId();
-  const thisFile = DriveApp.getFileById(thisFileId);
+  const activeCell = SpreadsheetApp.getActiveSheet().getActiveCell();
+  if (activeCell && activeCell.getValue() && activeCell.getValue().length > 0) {
 
-  const parents = thisFile.getParents();
-  let f;
-  while (parents.hasNext()) {
-    f = parents.next();
-  }
-  const imagesFolders = f.getFoldersByName('Images');
-  let imageFolder;
-  if (!imagesFolders.hasNext()) {
-    imageFolder = f.createFolder('Images');
-  } else {
-    imageFolder = imagesFolders.next();
-  }
-  const imageBlob = Utilities.newBlob(
+    const fileName = activeCell.getValue();
+
+    const thisFileId = SpreadsheetApp.getActive().getId();
+    const thisFile = DriveApp.getFileById(thisFileId);
+
+    const parents = thisFile.getParents();
+    let f;
+    while (parents.hasNext()) {
+      f = parents.next();
+    }
+    const imagesFolders = f.getFoldersByName('Images');
+    let imageFolder;
+    if (!imagesFolders.hasNext()) {
+      imageFolder = f.createFolder('Images');
+    } else {
+      imageFolder = imagesFolders.next();
+    }
+    const imageBlob = Utilities.newBlob(
       Utilities.base64Decode(data.split(',')[1]),
       type,
-  );
-  const fileName = SpreadsheetApp.getActiveSheet().getActiveCell().getValue();
-  imageBlob.setName(fileName);
-  imageFolder.createFile(imageBlob);
+    );
+    imageBlob.setName(fileName);
+    imageFolder.createFile(imageBlob);
+  } else {
+    throw new Error(ERROR_MISSING_VALUE);
+  }
+
 }

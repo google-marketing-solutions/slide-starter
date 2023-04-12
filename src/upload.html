@@ -2,10 +2,25 @@
 <html>
   <head>
     <base target="_top" />
+    <style>
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+      }
+      input {
+        margin: 10px;
+        padding: 5px;
+      }
+    </style>
   </head>
   <body>
+    <p>
+      An Images folder will be created automatically if it does not exist
+      already in the Drive location where this Sheet has been saved.
+    </p>
+    <p>The image will have the same name as the text in the cell selected.</p>
     <form id="fileform" onsubmit="event.preventDefault()">
       <input type="file" id="file" name="fileToUpload" />
+      <div id="error"></div>
       <input
         type="Button"
         value="Upload"
@@ -18,18 +33,25 @@
         const reader = new FileReader();
 
         reader.onload = function (e) {
-          google.script.run.uploadFile(e.target.result, file.type);
+          google.script.run
+            .withFailureHandler(onFailure)
+            .withSuccessHandler(onSuccess)
+            .uploadFile(e.target.result, file.type);
         };
         reader.readAsDataURL(file);
       }
 
-      function closeDialog() {
-        google.script.host.close();
+      function onFailure(error) {
+        const div = document.getElementById("error");
+        div.innerHTML = "ERROR: " + error.message;
       }
 
-      function alertFailure(error) {
+      function onSuccess(output) {
+        closeDialog();
+      }
+
+      function closeDialog() {
         google.script.host.close();
-        alert("failed Upload" + error.message);
       }
     </script>
   </body>
