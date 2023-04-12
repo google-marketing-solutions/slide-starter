@@ -6,16 +6,16 @@
 /* exported openUploadDialog */
 /* exported sheetUI */
 
-const ERROR_MISSING_VALUE = 'Selected cell was empty. Please select a cell with a string value.';
+const ERROR_MISSING_VALUE= 'Please select a non-empty cell.';
 
 /**
  * Add menu items for helpful UI.
  */
 function sheetUI() {
   SpreadsheetApp.getUi()
-    .createMenu('Wizard')
-    .addItem('Upload', 'openUploadDialog')
-    .addToUi();
+      .createMenu('Wizard')
+      .addItem('Upload', 'openUploadDialog')
+      .addToUi();
 }
 
 /**
@@ -34,7 +34,6 @@ function openUploadDialog() {
 function uploadFile(data, type) {
   const activeCell = SpreadsheetApp.getActiveSheet().getActiveCell();
   if (activeCell && activeCell.getValue() && activeCell.getValue().length > 0) {
-
     const fileName = activeCell.getValue();
 
     const thisFileId = SpreadsheetApp.getActive().getId();
@@ -53,13 +52,12 @@ function uploadFile(data, type) {
       imageFolder = imagesFolders.next();
     }
     const imageBlob = Utilities.newBlob(
-      Utilities.base64Decode(data.split(',')[1]),
-      type,
+        Utilities.base64Decode(data.split(',')[1]),
+        type,
     );
     imageBlob.setName(fileName);
     imageFolder.createFile(imageBlob);
   } else {
     throw new Error(ERROR_MISSING_VALUE);
   }
-
 }
