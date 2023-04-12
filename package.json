@@ -1,0 +1,36 @@
+{
+  "name": "slide-starter",
+  "version": "1.0.0",
+  "description": "Slide Starter is a simple tool that simplifies the process of creating slide decks for mobile website and app audits through Apps Script, leveraging Google Sheets for the analysis.",
+  "main": ".eslintrc.js",
+  "type": "commonjs",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "build": "rm -rf dist && tsc",
+    "test": "mocha -r ts-node/register test/*.spec.ts",
+    "generate": "./generate.sh"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gtech-professional-services/slide-starter.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/gtech-professional-services/slide-starter/issues"
+  },
+  "homepage": "https://github.com/gtech-professional-services/slide-starter#readme",
+  "devDependencies": {
+    "@types/chai": "^4.3.4",
+    "@types/mocha": "^10.0.1",
+    "@types/rewire": "^2.5.28",
+    "chai": "^4.3.7",
+    "mocha": "^10.2.0",
+    "rewire": "^6.0.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.0.2",
+    "watchify": "^4.0.0"
+  }
+}

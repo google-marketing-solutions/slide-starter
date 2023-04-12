@@ -5,3 +5,11 @@ Slide Starter is a simple tool that simplifies the process of creating slide dec
 This repository contains the code related to the library that will be published, as well as the client code to be included in the Sheet for reusability.
 
 The project is currently in development.
+
+## Usage
+
+```
+npm install
+npm test
+npm run generate -- web
+```

@@ -1,20 +1,17 @@
 module.exports = {
-  'extends':
-            [
-              'eslint:recommended',
-              'google',
-            ],
-  'env': {
-    'browser': true,
-    'es2021': true,
-    'es6': true,
-    'mocha': true,
+  ignorePatterns: ['test/Core.spec.ts'],
+  extends: ['eslint:recommended', 'google'],
+  env: {
+    browser: true,
+    es2021: true,
+    es6: true,
+    mocha: true,
   },
-  'overrides': [],
-  'parserOptions': {
-    'ecmaVersion': 'latest',
+  overrides: [],
+  parserOptions: {
+    ecmaVersion: 'latest',
   },
-  'rules': {
+  rules: {
     'no-undef': 'off',
   },
 };
