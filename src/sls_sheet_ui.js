@@ -7,7 +7,7 @@
 /* exported sheetUI */
 
 const ERROR_MISSING_VALUE = 'Please select a non-empty cell.';
-const ERROR_PARENT_FOLDER = 
+const ERROR_PARENT_FOLDER =
     'You do not have access to the parent folder of this Sheet.';
 const SUCCESS_UPLOADED = 'File uploaded for: ';
 
@@ -27,7 +27,7 @@ function sheetUI() {
 function openUploadDialog() {
   const activeCell = SpreadsheetApp.getActiveSheet().getActiveCell();
   if (activeCell && activeCell.getValue() && activeCell.getValue().length > 0) {
-    const criteriaName = 
+    const criteriaName =
         SpreadsheetApp.getActiveSheet().getRange(activeCell.getRow(), 1);
     const html = HtmlService.createTemplateFromFile('upload');
     html.criteriaName = criteriaName.getValue();
