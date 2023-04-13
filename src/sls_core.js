@@ -28,7 +28,7 @@
  *   Helper function to retrieve a specific shape within a slide deck based on
  *   a string
  *
- * 04/04/23
+ * 06/04/23
  */
 
 // Error messages
@@ -435,5 +435,77 @@ function createCollectionSlide(deck, insightDeck, slideLayout) {
     }
     const row = values[i];
     parseFieldsAndCreateCollectionSlide(deck, insightDeck, slideLayout, row);
+  }
+}
+
+/**
+ * Creates a single slide in a Google Slides presentation.
+ * The function first gets the spreadsheet that contains the data for the slide. Then, it creates a new slide in the presentation using the specified layout. If there is a master slide, the function removes it.
+ * Next, the function fetches the title, subtitle, and body text for the slide from the spreadsheet. It then sets the title, subtitle, and body text for the slide.
+ * Finally, the function fetches the image shapes and ranges for the slide from the spreadsheet. If there are image shapes and ranges, the function adds the images to the slide.
+ *
+ * 
+ * @param {SlidesApp.Presentation} deck The presentation to add the slide to.
+ * @param {SlidesApp.InsightDeck} insightDeck The insight deck that contains the data for the slide.
+ * @param {SlidesApp.SlideLayout} slideLayout The layout to use for the slide.
+ *
+ * @returns {void}
+ */
+function createSingleSlide(deck, insightDeck, slideLayout) {
+  const spreadsheet = SpreadsheetApp.getActive().getSheetByName(
+    documentProperties.getProperty('DATA_SOURCE_SHEET'));
+
+  const slide = deck.appendSlide(slideLayout);
+  if (deck.getMasters().length > 1) {
+    deck.getMasters()[deck.getMasters().length - 1].remove();
+  }
+
+  //Fetch fields
+  const titleRange = documentProperties.getProperty('TITLE_RANGE');
+  if (titleRange && titleRange.length > 0) {
+    const title = spreadsheet.getRange(titleRange).getValue();
+    const slideTitlePlaceholder =
+      slide.getPlaceholder(SlidesApp.PlaceholderType.TITLE);
+    const slideTitle = slideTitlePlaceholder.asShape().getText();
+    slideTitle.setText(title);
+  }
+
+
+  const subtitleRange = documentProperties.getProperty('SUBTITLE_RANGE');
+  if (subtitleRange && subtitleRange.length > 0) {
+    const subtitle = spreadsheet.getRange(subtitleRange).getValue();
+    const slideSubtitlePlaceholder =
+    slide.getPlaceholder(SlidesApp.PlaceholderType.SUBTITLE);
+    const slideSubtitle = slideSubtitlePlaceholder.asShape().getText();
+    slideSubtitle.setText(subtitle);
+  }
+
+  const bodyRange = documentProperties.getProperty('BODY_RANGE');
+  if (bodyRange && bodyRange.length > 0) {
+    const body = spreadsheet.getRange(bodyRange).getValue();
+    const slideBodyPlaceholder =
+    slide.getPlaceholder(SlidesApp.PlaceholderType.BODY);
+    const slideBody = slideBodyPlaceholder.asShape().getText();
+    slideBody.setText(body);
+  }
+
+  const imageShapesArray = documentProperties.getProperty('IMAGE_SHAPES')
+    .split(',').map((item) => item.trim());
+  const imageRangesArray = documentProperties.getProperty('IMAGE_RANGES')
+    .split(',').map((item) => item.trim());
+
+  if (imageShapesArray && imageShapesArray.length > 0) {
+    for (let i = 0; i < imageShapesArray.length; i++) {
+      const shapeId = imageShapesArray[i];
+      const range = imageRangesArray[i];
+
+      if (shapeId && range) {
+        const imageShape = retrieveShape(slide, shapeId);
+        const imageValue = spreadsheet.getRange(range).getValue();
+        slide.insertImage(
+          imageValue, imageShape.getLeft(), imageShape.getTop(),
+          imageShape.getWidth(), imageShape.getHeight());
+      }
+    }
   }
 }
