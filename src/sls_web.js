@@ -1,5 +1,5 @@
 /**
- * @fileoverview Description of this file.
+ * @fileoverview Web implementation.
  */
 
 /* exported applyCustomStyle */
@@ -30,6 +30,7 @@ function onOpen() {
       },
     ];
     spreadsheet.addMenu('Performance Starter', menuItems);
+    sheetUI();
   } catch (error) {
     throw new Error('onOpen failed: ' + error.toString());
   }

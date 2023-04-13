@@ -44,6 +44,8 @@ function onOpen() {
     },
   ];
   spreadsheet.addMenu('Katalyst', menuItems);
+
+  sheetUI();
 }
 
 /**
