@@ -7,6 +7,7 @@
 /* exported sheetUI */
 
 const ERROR_MISSING_VALUE= 'Please select a non-empty cell.';
+const SUCCESS_UPLOADED = 'File uploaded for: ';
 
 /**
  * Add menu items for helpful UI.
@@ -57,6 +58,8 @@ function uploadFile(data, type) {
     );
     imageBlob.setName(fileName);
     imageFolder.createFile(imageBlob);
+    SpreadsheetApp.getActiveSpreadsheet()
+        .toast(SUCCESS_UPLOADED + criteriaId);
   } else {
     throw new Error(ERROR_MISSING_VALUE);
   }
