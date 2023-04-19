@@ -28,7 +28,7 @@
  *   Helper function to retrieve a specific shape within a slide deck based on
  *   a string
  *
- * 06/04/23
+ * 14/04/23
  */
 
 // Error messages
@@ -320,6 +320,60 @@ function getFunctionByName(functionName) {
   return new Function(`return ${functionName};`)();
 }
 
+/**
+ * Checks if the given URL is a valid image URL.
+ *
+ * @param {string} url The URL to check.
+ * @return {boolean} Whether the URL is a valid image URL.
+ */
+function isValidImageUrl(url) {
+  return url.startsWith('http://') || url.startsWith('https://');
+}
+
+/**
+ * Returns a file, which is assumed to be an image file, for a criteria client
+ * screenshot which should be named after a criteria id. Any formats are
+ * considered for the query, but it is assumed that the file will be an image.
+ *
+ * This file is retrieved from a folder created programmatically which is
+ * assumed to exist.
+ *
+ * If no such file has been found, the function returns the url of the default
+ * image mockup, which behaves analogously to an image file.
+ *
+ * There are warnings sent out (currently as a toast on the spreadsheet) in this
+ * case, and also in case that multiple image files are found. When finding
+ * multiple images, the last one is selected.
+ *
+ * @param {!Folder} folder The folder where images are being stored.
+ * @param {string} imageName Name of the image to be found.
+ * @return {?*} Image file for the screenshot or a string url for the default
+ */
+function retrieveImageFromFolder(folder, imageName) {
+  const searchQuery = `title contains '${imageName}'
+      and mimeType contains 'image'`;
+  const files = folder.searchFiles(searchQuery);
+  let file = null;
+
+  if (files.hasNext()) {
+    file = files.next();
+  } else {
+    SpreadsheetApp.getActiveSpreadsheet().toast(WARNING_NO_IMAGES + imageName);
+  }
+
+  if (files.hasNext()) {
+    SpreadsheetApp.getActiveSpreadsheet().toast(
+        WARNING_MULTIPLE_IMAGES + imageName);
+  }
+
+  if (file === null) {
+    file = PropertiesService.getDocumentProperties().getProperty(
+        'DEFAULT_IMAGE_URL');
+  }
+
+  return file;
+}
+
 // --- Katalyst loops
 
 /**
@@ -440,32 +494,38 @@ function createCollectionSlide(deck, insightDeck, slideLayout) {
 
 /**
  * Creates a single slide in a Google Slides presentation.
- * The function first gets the spreadsheet that contains the data for the slide. Then, it creates a new slide in the presentation using the specified layout. If there is a master slide, the function removes it.
- * Next, the function fetches the title, subtitle, and body text for the slide from the spreadsheet. It then sets the title, subtitle, and body text for the slide.
- * Finally, the function fetches the image shapes and ranges for the slide from the spreadsheet. If there are image shapes and ranges, the function adds the images to the slide.
+ * The function first gets the spreadsheet that contains the data for the slide.
+ * Then, it creates a new slide in the presentation using the specified layout.
+ * If there is a master slide, the function removes it. Next, the function
+ * fetches the title, subtitle, and body text for the slide from the
+ * spreadsheet. It then sets the title, subtitle, and body text for the slide.
+ * Finally, the function fetches the image shapes and ranges for the slide from
+ * the spreadsheet. If there are image shapes and ranges, the function adds the
+ * images to the slide.
  *
- * 
+ *
  * @param {SlidesApp.Presentation} deck The presentation to add the slide to.
- * @param {SlidesApp.InsightDeck} insightDeck The insight deck that contains the data for the slide.
+ * @param {SlidesApp.InsightDeck} insightDeck The insight deck that contains the
+ *     data for the slide.
  * @param {SlidesApp.SlideLayout} slideLayout The layout to use for the slide.
  *
- * @returns {void}
+ * @return {void}
  */
 function createSingleSlide(deck, insightDeck, slideLayout) {
   const spreadsheet = SpreadsheetApp.getActive().getSheetByName(
-    documentProperties.getProperty('DATA_SOURCE_SHEET'));
+      documentProperties.getProperty('DATA_SOURCE_SHEET'));
 
   const slide = deck.appendSlide(slideLayout);
   if (deck.getMasters().length > 1) {
     deck.getMasters()[deck.getMasters().length - 1].remove();
   }
 
-  //Fetch fields
+  // Fetch fields
   const titleRange = documentProperties.getProperty('TITLE_RANGE');
   if (titleRange && titleRange.length > 0) {
     const title = spreadsheet.getRange(titleRange).getValue();
     const slideTitlePlaceholder =
-      slide.getPlaceholder(SlidesApp.PlaceholderType.TITLE);
+        slide.getPlaceholder(SlidesApp.PlaceholderType.TITLE);
     const slideTitle = slideTitlePlaceholder.asShape().getText();
     slideTitle.setText(title);
   }
@@ -475,7 +535,7 @@ function createSingleSlide(deck, insightDeck, slideLayout) {
   if (subtitleRange && subtitleRange.length > 0) {
     const subtitle = spreadsheet.getRange(subtitleRange).getValue();
     const slideSubtitlePlaceholder =
-    slide.getPlaceholder(SlidesApp.PlaceholderType.SUBTITLE);
+        slide.getPlaceholder(SlidesApp.PlaceholderType.SUBTITLE);
     const slideSubtitle = slideSubtitlePlaceholder.asShape().getText();
     slideSubtitle.setText(subtitle);
   }
@@ -484,15 +544,17 @@ function createSingleSlide(deck, insightDeck, slideLayout) {
   if (bodyRange && bodyRange.length > 0) {
     const body = spreadsheet.getRange(bodyRange).getValue();
     const slideBodyPlaceholder =
-    slide.getPlaceholder(SlidesApp.PlaceholderType.BODY);
+        slide.getPlaceholder(SlidesApp.PlaceholderType.BODY);
     const slideBody = slideBodyPlaceholder.asShape().getText();
     slideBody.setText(body);
   }
 
   const imageShapesArray = documentProperties.getProperty('IMAGE_SHAPES')
-    .split(',').map((item) => item.trim());
+      .split(',')
+      .map((item) => item.trim());
   const imageRangesArray = documentProperties.getProperty('IMAGE_RANGES')
-    .split(',').map((item) => item.trim());
+      .split(',')
+      .map((item) => item.trim());
 
   if (imageShapesArray && imageShapesArray.length > 0) {
     for (let i = 0; i < imageShapesArray.length; i++) {
@@ -503,9 +565,102 @@ function createSingleSlide(deck, insightDeck, slideLayout) {
         const imageShape = retrieveShape(slide, shapeId);
         const imageValue = spreadsheet.getRange(range).getValue();
         slide.insertImage(
-          imageValue, imageShape.getLeft(), imageShape.getTop(),
-          imageShape.getWidth(), imageShape.getHeight());
+            imageValue, imageShape.getLeft(), imageShape.getTop(),
+            imageShape.getWidth(), imageShape.getHeight());
       }
     }
+  }
+}
+
+
+/**
+ * Creates a collection slide based on a slide layout and data from a specified
+ * row in a Google Sheet.
+ * @param {GoogleAppsScript.Slides.Presentation} deck - The slide deck to add
+ *     the slide to.
+ * @param {GoogleAppsScript.Spreadsheet.Sheet} insightDeck - The sheet
+ *     containing the data to populate the slide.
+ * @param {GoogleAppsScript.Slides.Layout} slideLayout - The layout to use for
+ *     the slide.
+ * @param {!Array<string>} row Array of strings with information from the
+ *     spreadsheet
+ */
+function parseFieldsAndCreateCollectionSlide(
+    deck, insightDeck, slideLayout, row) {
+  const slide = deck.appendSlide(slideLayout);
+  if (deck.getMasters().length > 1) {
+    deck.getMasters()[deck.getMasters().length - 1].remove();
+  }
+
+  // Add title
+  const titleColumn = documentProperties.getProperty('TITLE_COLUMN');
+  if (titleColumn && titleColumn.length > 0) {
+    const title = row[titleColumn - 1];
+    const slideTitlePlaceholder =
+        slide.getPlaceholder(SlidesApp.PlaceholderType.TITLE);
+    const slideTitle = slideTitlePlaceholder.asShape().getText();
+    slideTitle.setText(title);
+  }
+
+  // Add subtitle
+  const subtitleColumn = documentProperties.getProperty('SUBTITLE_COLUMN');
+  if (subtitleColumn && subtitleColumn.length > 0) {
+    const subtitle = row[subtitleColumn - 1];
+    const slideSubtitlePlaceholder =
+        slide.getPlaceholder(SlidesApp.PlaceholderType.SUBTITLE);
+    const slideSubtitle = slideSubtitlePlaceholder.asShape().getText();
+    slideSubtitle.setText(subtitle);
+  }
+
+  // Add body
+  const bodyColumn = documentProperties.getProperty('BODY_COLUMN');
+  if (bodyColumn && bodyColumn.length > 0) {
+    const body = row[bodyColumn - 1];
+    const slideBodyPlaceholder =
+        slide.getPlaceholder(SlidesApp.PlaceholderType.BODY);
+    const slideBody = slideBodyPlaceholder.asShape().getText();
+    slideBody.setText(body);
+  }
+
+  // Add images
+  const imageShapesArray = documentProperties.getProperty('IMAGE_SHAPES')
+      .split(',')
+      .map((item) => item.trim());
+  const imageColumnsArray = documentProperties.getProperty('IMAGE_COLUMNS')
+      .split(',')
+      .map((item) => item.trim());
+
+  if (imageShapesArray && imageShapesArray.length > 0) {
+    for (let i = 0; i < imageShapesArray.length; i++) {
+      const shapeId = imageShapesArray[i];
+      const column = imageColumnsArray[i];
+
+      if (shapeId && column) {
+        const imageShape = retrieveShape(slide, shapeId);
+        let imageValue = row[column - 1];
+        if (!imageValue) {
+          imageValue = documentProperties.getProperty('DEFAULT_IMAGE_URL');
+        } else if (!isValidImageUrl(imageValue)) {
+          const folder =
+              DriveApp.getFileById(SpreadsheetApp.getActive().getId())
+                  .getParents()
+                  .next();
+          const imageName = imageValue;
+          imageValue = retrieveImageFromFolder(folder, imageName);
+        }
+        slide.insertImage(
+            imageValue, imageShape.getLeft(), imageShape.getTop(),
+            imageShape.getWidth(), imageShape.getHeight());
+      }
+    }
+  }
+
+  // Add insight slides
+  const insightSlidesColumn =
+      documentProperties.getProperty('INSIGHT_SLIDE_ID_COLUMN');
+  const insights =
+      row[insightSlidesColumn - 1].split(',').map((item) => item.trim());
+  if (insights.length > 0) {
+    appendInsightSlides(deck, insightDeck, insights);
   }
 }
