@@ -77,5 +77,5 @@ function uploadFile(data, type) {
   imageBlob.setName(fileName);
   imageFolder.createFile(imageBlob);
   SpreadsheetApp.getActiveSpreadsheet()
-      .toast(SUCCESS_UPLOADED + criteriaId);
+      .toast(SUCCESS_UPLOADED + fileName);
 }
