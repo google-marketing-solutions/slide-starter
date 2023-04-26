@@ -327,6 +327,7 @@ function getFunctionByName(functionName) {
  * @return {boolean} Whether the URL is a valid image URL.
  */
 function isValidImageUrl(url) {
+  //TODO: Check if it's an image
   return url.startsWith('http://') || url.startsWith('https://');
 }
 
@@ -343,7 +344,7 @@ function isValidImageUrl(url) {
  *
  * There are warnings sent out (currently as a toast on the spreadsheet) in this
  * case, and also in case that multiple image files are found. When finding
- * multiple images, the last one is selected.
+ * multiple images, the first one is selected.
  *
  * @param {!Folder} folder The folder where images are being stored.
  * @param {string} imageName Name of the image to be found.
