@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top" />
+    <style>
+      body {
+        font-family: Arial, Helvetica, sans-serif;
+      }
+      button {
+        margin: 10px;
+        padding: 5px;
+      }
+      #id {
+        color: red;
+      }
+    </style>
+  </head>
+  <body>
+    <p>Upload for: <?= criteriaName ?></p>
+    <p>
+      An Images folder will be created automatically if it does not exist
+      already in the Drive location where this Sheet has been saved.
+    </p>
+    <p>You neeed to have access to the parent folder of this Sheet for upload to work.</p>
+    <p>The image will have the same name as the text in the cell selected.</p>
+    <form id="fileform" onsubmit="event.preventDefault()">
+      <input type="file" id="file" name="fileToUpload" />
+      <div id="error"></div>
+      <input
+        type="Button"
+        value="Upload"
+        onclick="uploadthis(this.parentNode)"
+      />
+    </form>
+    <script>
+      function uploadthis(frmData) {
+        const file = frmData.fileToUpload.files[0];
+        const reader = new FileReader();
+
+        reader.onload = function (e) {
+          google.script.run
+            .withFailureHandler(onFailure)
+            .withSuccessHandler(onSuccess)
+            .uploadFile(e.target.result, file.type);
+        };
+        reader.readAsDataURL(file);
+      }
+
+      function onFailure(error) {
+        const div = document.getElementById("error");
+        div.innerHTML = "ERROR: " + error.message;
+      }
+
+      function onSuccess(output) {
+        closeDialog();
+      }
+
+      function closeDialog() {
+        google.script.host.close();
+      }
+    </script>
+  </body>
+</html>

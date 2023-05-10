@@ -1,15 +1,71 @@
 /**
- * @fileoverview Description of this file.
+ * @fileoverview Web implementation.
  */
 
 /* exported applyCustomStyle */
+/* exported createStarterSlides */
 /* exported onOpen */
 /* exported parseFieldsAndCreateSlide */
 
+/**
+ * A special function that runs when the spreadsheet is open, used to add a
+ * custom menu to the spreadsheet.
+ */
+function onOpen() {
+  try {
+    loadConfiguration();
+    const spreadsheet = SpreadsheetApp.getActive();
+    const menuItems = [
+      {
+        name: 'Generate starter slide deck',
+        functionName: 'createStarterSlides',
+      },
+      {
+        name: 'Load configuration',
+        functionName: 'loadConfiguration',
+      },
+      {
+        name: 'Filter criteria only',
+        functionName: 'filterAndSortData',
+      },
+    ];
+    spreadsheet.addMenu('Performance Starter', menuItems);
+    sheetUI();
+  } catch (error) {
+    throw new Error('onOpen failed: ' + error.toString());
+  }
+}
+
+/**
+ * Loads configuration, fetches metrics for URLs, and creates slide deck.
+ */
+function createStarterSlides() {
+  loadConfiguration();
+  cloneSitesSheet();
+  runBatchFromQueue();
+  createDeckFromDatasources();
+}
+
+/**
+ * Object whose keys represent Core Web Vital metrics and values are Arrays that
+ * contain the low & high thresholds for that metric. Used in coloring the table
+ * for CrUX CWV data.
+ */
 const CWV = {
   LCP: [2500, 4000],
   FID: [100, 300],
   CLS: [0.1, 0.25],
+};
+
+/**
+ * Object whose keys are colors and values are arrays of RGB values in decimal.
+ * Used in coloring the table for CrUX CWV data.
+ */
+const COLORS = {
+  GREEN: [.04, .80, .41], // Good
+  YELLOW: [1, 0.64, 0], // Needs Improvement
+  RED: [1, 0.30, 0.25], // Poor
+  WHITE: [1, 1, 1], // None
 };
 
 /**
@@ -25,28 +81,30 @@ const CWV = {
  */
 function parseFieldsAndCreateSlide(
     deck, insightDeck, recommendationSlideLayout, row) {
-  const criteriaNameIndex =
-      documentProperties.getProperty('RECOMMENDATIONS_CRITERIA_NAME_ROW') - 1;
+  const criteriaNameIndex = documentProperties.getProperty('TITLE_COLUMN') - 1;
   const criteriaAppliesIndex =
-      documentProperties.getProperty('RECOMMENDATIONS_APPLIES_ROW') - 1;
+      documentProperties.getProperty('SUBTITLE_COLUMN') - 1;
   const criteriaProblemStatementIndex =
-      documentProperties.getProperty('RECOMMENDATIONS_PROBLEM_STATEMENT_ROW') -
-      1;
+      documentProperties
+          .getProperty('WEB_RECOMMENDATIONS_PROBLEM_STATEMENT_ROW') - 1;
   const criteriaSolutionStatementIndex =
-      documentProperties.getProperty('RECOMMENDATIONS_SOLUTION_STATEMENT_ROW') -
-      1;
+      documentProperties
+          .getProperty('WEB_RECOMMENDATIONS_SOLUTION_STATEMENT_ROW') - 1;
   const criteriaInsightSlidesIndex =
-      documentProperties.getProperty('RECOMMENDATIONS_INSIGHTS_ROW') - 1;
+      documentProperties.getProperty('INSIGHT_SLIDE_ID_COLUMN') - 1;
 
   const criteria = row[criteriaNameIndex];
-  const applicable =
-      `Applies for: ${row[criteriaAppliesIndex].split(',').join(',')}`;
+  const applicable = row[criteriaAppliesIndex];
+  let potentialSubtitle = '';
+  if (applicable) {
+    potentialSubtitle = `Applies for: ${applicable}`;
+  }
   const description = row[criteriaProblemStatementIndex];
   const learnMore = row[criteriaSolutionStatementIndex];
   const insights = row[criteriaInsightSlidesIndex].split(',');
 
   createRecommendationSlideGAS(
-      deck, recommendationSlideLayout, criteria, applicable, description,
+      deck, recommendationSlideLayout, criteria, potentialSubtitle, description,
       learnMore, insights);
   if (insights.length > 0) {
     appendInsightSlides(deck, insightDeck, insights);
@@ -63,6 +121,14 @@ function applyCustomStyle(newDeckId) {
   const deck = SlidesApp.openById(newDeckId);
   const insightDeck =
       SlidesApp.openById(documentProperties.getProperty('INSIGHTS_DECK_ID'));
+  const appendixDeckId = documentProperties.getProperty('APPENDIX_DECK_ID');
+  if (appendixDeckId) {
+    const appendixSlides = SlidesApp.openById(appendixDeckId).getSlides();
+    const thisDeck = SlidesApp.openById(newDeckId);
+    for (const slide of appendixSlides) {
+      thisDeck.appendSlide(slide, SlidesApp.SlideLinkingMode.NOT_LINKED);
+    }
+  }
   const endSlideId = documentProperties.getProperty('END_SLIDE_ID');
   const endSlide = insightDeck.getSlideById(endSlideId.trim());
   deck.appendSlide(endSlide, SlidesApp.SlideLinkingMode.NOT_LINKED);
@@ -96,26 +162,25 @@ function createRecommendationSlideGAS(
 
   const titlePlaceholder =
       slide.getPlaceholder(SlidesApp.PlaceholderType.TITLE);
-  // const subtitlePlaceholder =
-  //     slide.getPlaceholder(SlidesApp.PlaceholderType.SUBTITLE);
+  const subtitlePlaceholder =
+      slide.getPlaceholder(SlidesApp.PlaceholderType.SUBTITLE);
   const bodyPlaceholder = slide.getPlaceholder(SlidesApp.PlaceholderType.BODY);
 
   const titleRange = titlePlaceholder.asShape().getText();
   titleRange.setText(criteria);
 
-  // const subtitleRange = subtitlePlaceholder.asShape().getText();
-  // subtitleRange.setText(applicable);
+  const subtitleRange = subtitlePlaceholder.asShape().getText();
+  subtitleRange.setText(applicable);
 
   const bodyRange = bodyPlaceholder.asShape().getText();
   bodyRange.setText(description);
 
   const learnMoreShape = retrieveShape(slide, 'learn_more');
-  learnMoreShape.setLinkUrl(learnMore);
   slide
       .insertTextBox(
           learnMore, learnMoreShape.getLeft(), learnMoreShape.getTop(),
           learnMoreShape.getWidth(), learnMoreShape.getHeight())
-      .setLinkUrl(learnMore);
+      .getText().getTextStyle().setLinkUrl(learnMore);
 }
 
 /**
@@ -125,9 +190,9 @@ function createRecommendationSlideGAS(
  * being flattened as JSON.
  *
  * @param {string} tableId String that identifies the table to modify
- * @param {string} rowIndex String that identifies the table to modify
- * @param {string} columnIndex String that identifies the table to modify
- * @param {string} color String that identifies the table to modify
+ * @param {Number} rowIndex Number that identifies the row to modify
+ * @param {Number} columnIndex Number that identifies the column to modify
+ * @param {Array} color Array of RGB values for the table cell
  */
 function buildBackgroundCellColorTableStyleSlidesRequest(
     tableId, rowIndex, columnIndex, color) {
@@ -163,21 +228,22 @@ function buildBackgroundCellColorTableStyleSlidesRequest(
 }
 
 /**
+ * Determines a color based on if a value is a Good, Needs Improvement or Poor
+ * range for a given metric.
  *
- * @param {*} cwv
- * @param {*} value
- * @return {*}
+ * @param {Array} range Array with a low and high threshold for a CWV metric
+ * @param {Number} value Number indicating the metric score
+ * @return {Array} Array of RBG values in decimal form
  */
-function colorForCWV(cwv, value) {
-  const lowThreshold = cwv[0];
-  const highThreshold = cwv[1];
-
-  if (value <= lowThreshold) {
-    return [.04, .80, .41];
+function colorForCWV([lowThreshold, highThreshold], value) {
+  if (!value.trim()) {
+    return COLORS.WHITE;
+  } else if (value <= lowThreshold) {
+    return COLORS.GREEN;
   } else if (value < highThreshold) {
-    return [1, 0.64, 0];
+    return COLORS.YELLOW;
   } else {
-    return [1, 0.30, 0.25];
+    return COLORS.RED;
   }
 }
 
@@ -217,4 +283,3 @@ function colorCWVTable(deckId) {
         cwvTable.getObjectId(), i, 4, color);
   }
 }
-
