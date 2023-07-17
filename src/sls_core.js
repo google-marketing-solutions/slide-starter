@@ -305,6 +305,11 @@ function parseFieldsAndCreateCollectionSlide(
         let imageValue = row[column - 1];
         if (!imageValue) {
           imageValue = documentProperties.getProperty('DEFAULT_IMAGE_URL');
+        } else if (imageValue.split(",")[0] == "data:image/jpeg;base64") {
+          const imageBase64 = imageValue.split(",")[1];
+          const decodedImage = Utilities.base64Decode(imageBase64);
+          const imageBlob = Utilities.newBlob(decodedImage, MimeType.JPEG);
+          imageValue = imageBlob;
         } else if (!isValidImageUrl(imageValue)) {
           const folder =
               DriveApp.getFileById(SpreadsheetApp.getActive().getId())
@@ -328,19 +333,32 @@ function parseFieldsAndCreateCollectionSlide(
       .split(',')
       .map((item) => item.trim());
 
-  if (imageShapesArray && imageShapesArray.length > 0) {
-    for (let i = 0; i < imageShapesArray.length; i++) {
-      const shapeId = imageShapesArray[i];
-      const column = imageColumnsArray[i];
+  if (textShapesArray && textColumnsArray.length > 0) {
+    for (let i = 0; i < textShapesArray.length; i++) {
+      const shapeId = textShapesArray[i];
+      const column = textColumnsArray[i];
 
       if (shapeId && column) {
-        const textShape = retrieveShape(slide, shapeId).getText();
+        const textShape = retrieveShape(slide, shapeId);
         let textValue = row[column - 1];
-        if (!textValue) {
-          textValue = "";
+        if (textValue) {
+          slide.insertTextBox(textValue, textShape.getLeft(), textShape.getTop(),
+            textShape.getWidth(), textShape.getHeight());
         } 
-        textShape.setText(textValue);
       }
+    }
+  }
+}
+
+function addInsightSlides(deck, insightDeck, row) {
+  // Add insight slides
+  const insightSlidesColumn =
+      documentProperties.getProperty('INSIGHT_SLIDE_ID_COLUMN');
+  if (insightSlidesColumn && insightSlidesColumn.length > 0) {
+    const insights =
+      row[insightSlidesColumn - 1].split(',').map((item) => item.trim());
+    if (insights.length > 0) {
+      appendInsightSlides(deck, insightDeck, insights);
     }
   }
 }
