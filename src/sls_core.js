@@ -28,7 +28,7 @@
  *   Helper function to retrieve a specific shape within a slide deck based on
  *   a string
  *
- * 14/04/23
+ * 23/05/23
  */
 
 // Error messages
@@ -489,7 +489,10 @@ function createCollectionSlide(deck, insightDeck, slideLayout) {
       continue;
     }
     const row = values[i];
-    parseFieldsAndCreateCollectionSlide(deck, insightDeck, slideLayout, row);
+    if (shouldCreateCollectionSlide()) {
+      parseFieldsAndCreateCollectionSlide(deck, slideLayout, row);
+    }
+    addInsightSlides(deck, insightDeck, row);
   }
 }
 
@@ -587,7 +590,7 @@ function createSingleSlide(deck, insightDeck, slideLayout) {
  *     spreadsheet
  */
 function parseFieldsAndCreateCollectionSlide(
-    deck, insightDeck, slideLayout, row) {
+    deck, slideLayout, row) {
   const slide = deck.appendSlide(slideLayout);
   if (deck.getMasters().length > 1) {
     deck.getMasters()[deck.getMasters().length - 1].remove();
@@ -655,8 +658,10 @@ function parseFieldsAndCreateCollectionSlide(
       }
     }
   }
+}
 
-  // Add insight slides
+function addInsightSlides(deck, insightDeck, row) {
+    // Add insight slides
   const insightSlidesColumn =
       documentProperties.getProperty('INSIGHT_SLIDE_ID_COLUMN');
   const insights =
@@ -664,4 +669,11 @@ function parseFieldsAndCreateCollectionSlide(
   if (insights.length > 0) {
     appendInsightSlides(deck, insightDeck, insights);
   }
+}
+
+function shouldCreateCollectionSlide() {
+  const titleColumn = documentProperties.getProperty('TITLE_COLUMN');
+  const subtitleColumn = documentProperties.getProperty('SUBTITLE_COLUMN');
+  const bodyColumn = documentProperties.getProperty('BODY_COLUMN');
+  return (titleColumn && titleColumn.length > 0) && (subtitleColumn && subtitleColumn.length > 0) && (bodyColumn && bodyColumn.length > 0);
 }
