@@ -141,6 +141,18 @@ function createSlidesForDatasource(deck, insightDeck, slideLayout) {
  *
  */
 function createCollectionSlide(deck, insightDeck, slideLayout) {
+  //Execute the pre-collection creation hook
+  const preCollectionFunction = documentProperties.getProperty('PRE_COLLECTION_FUNCTION');
+  if (preCollectionFunction && preCollectionFunction.length > 0) {
+    const preCollectionFunctionArgsRaw = documentProperties.getProperty('PRE_COLLECTION_FUNCTION_ARGS');
+    let preCollectionFunctionArgs;
+    if (preCollectionFunctionArgsRaw && preCollectionFunctionArgsRaw.length > 0) {
+      preCollectionFunctionArgs = preCollectionFunctionArgsRaw.split(",");
+    } else {
+      preCollectionFunctionArgs = [];
+    }
+    getFunctionByName(preCollectionFunction)(deck, ...preCollectionFunctionArgs);
+  }
   const spreadsheet = SpreadsheetApp.getActive().getSheetByName(
       documentProperties.getProperty('DATA_SOURCE_SHEET'));
   filterAndSortData();
@@ -252,6 +264,13 @@ function createSingleSlide(deck, insightDeck, slideLayout) {
  */
 function parseFieldsAndCreateCollectionSlide(
     deck, slideLayout, row) {
+  //Execute the pre-slide creation hook
+  const preSlideFunction = documentProperties.getProperty('PRE_SLIDE_FUNCTION');
+  if (preSlideFunction && preSlideFunction.length > 0) {
+    getFunctionByName(preSlideFunction)(deck, slideLayout, row);
+  }
+
+  //Create slide
   const slide = deck.appendSlide(slideLayout);
   if (deck.getMasters().length > 1) {
     deck.getMasters()[deck.getMasters().length - 1].remove();
