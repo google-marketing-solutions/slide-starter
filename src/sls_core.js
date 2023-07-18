@@ -95,7 +95,7 @@ function prepareDependenciesAndCreateSlides(datasource, newDeckId) {
   const insightsDeckId = documentProperties.getProperty('INSIGHTS_DECK_ID');
   if (insightsDeckId && insightsDeckId.length > 0) {
     insightDeck =
-        SlidesApp.openById(documentProperties.getProperty('INSIGHTS_DECK_ID'));
+        SlidesApp.openById(insightsDeckId);
   }
 
   createSlidesForDatasource(deck, insightDeck, recommendationSlideLayout);
@@ -347,6 +347,17 @@ function parseFieldsAndCreateCollectionSlide(
         } 
       }
     }
+  }
+
+  const postSlideFunction = documentProperties.getProperty('POST_SLIDE_FUNCTION');
+  if (postSlideFunction && postSlideFunction.length > 0) {
+    //Add extra arguments if any were specified at config
+    const postSlideFunctionArgsRaw = documentProperties.getProperty('POST_SLIDE_FUNCTION_ARGS');
+    let postSlideFunctionArgs = {};
+    if (postSlideFunctionArgsRaw && postSlideFunctionArgsRaw.length > 0) {
+      postSlideFunctionArgs = JSON.parse(postSlideFunctionArgsRaw);
+    }
+    getFunctionByName(postSlideFunction)(slide, row, postSlideFunctionArgs);
   }
 }
 
