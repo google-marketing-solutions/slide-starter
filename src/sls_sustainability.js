@@ -8,31 +8,50 @@
  */
 
 /**
- * A special function that runs when the spreadsheet is open, used to add a
- * custom menu to the spreadsheet.
+ * Object whose keys represent Core Web Vital metrics and values are Arrays that
+ * contain the low & high thresholds for that metric. Used in coloring the table
+ * for CrUX CWV data.
  */
-function onOpen() {
-  loadConfiguration();
-  const spreadsheet = SpreadsheetApp.getActive();
-  const menuItems = [
-    {
-      name: 'Generate deck',
-      functionName: 'createDeckFromDatasources',
-    },
-  ];
-  spreadsheet.addMenu('Katalyst', menuItems);
-}
+const CWV = {
+  LCP: [2500, 4000],
+  FID: [100, 300],
+  INP: [100, 300],
+  CLS: [0.1, 0.25],
+};
+
+const cwvTextType = {
+  "CRUX_FID": CWV.FID,
+  "CRUX_CLS": CWV.CLS,
+  "CRUX_INP": CWV.INP,
+  "CRUX_LCP": CWV.LCP,
+};
+
+/**
+ * Object whose keys are colors and values are arrays of RGB values in decimal.
+ * Used in coloring the table for CrUX CWV data.
+ */
+const COLORS = {
+  GREEN: "#34A853", // Good
+  YELLOW: "#FBBC04", // Needs Improvement
+  RED: "#EA4335", // Poor
+  WHITE: "#F8F9FA", // None
+};
 
 /**
  * A special function that runs whenever a change on the spreadsheet is detected
  * In this case we will use it to handle the modification of adding or removing 
  * types of audit into Katalyst.
+ * 
+ * As a temporary solution while we manage access to an API to record telemetry
+ * we will look at changes at the telemetry sheet to make sure that an installable
+ * trigger can be executed as a user with permissions to store the telemetry data
+ * from the different sheets on a file that other users would not have access to.
  */
 function onEdit(e) {
   const currentSheetName = e.source.getActiveSheet().getName();
   if (currentSheetName != 'Audit Start') {
     return;
-  }
+  } 
   const currentColumn = e.range.columnStart;
   if (currentColumn != 1) { 
     return;
@@ -43,6 +62,96 @@ function onEdit(e) {
   const _ = (value) ? sheet.showSheet() : sheet.hideSheet();
 }
 
+// ----- Performance pre-collection function
+
+// ----- Performance post-collection function
+
+// ----- Performance post-slide function
+
+function customStyledTextFields(slide, row, postSlideFunctionArgs) {
+  const textFields = postSlideFunctionArgs;
+  const textShapesArray = textFields.shapes;
+  const textColumnsArray = textFields.columns;
+
+  for (let i = 0; i < textShapesArray.length; i++) {
+    const shapeId = textShapesArray[i];
+    const column = textColumnsArray[i];
+    if (shapeId && column) {
+      const textShape = retrieveShape(slide, shapeId);
+      let textValue = row[column - 1].toString();
+      if (textValue) {
+        const newTextBox = slide.insertTextBox(textValue, textShape.getLeft(), textShape.getTop(),
+          textShape.getWidth(), textShape.getHeight());
+        
+        //Centers text
+        newTextBox.getText().getParagraphStyle()
+          .setParagraphAlignment(SlidesApp.ParagraphAlignment.CENTER);
+
+        //Sets style and CWV-speficic formatting
+        const textStyle = newTextBox.getText().getTextStyle();
+        const shapeStyle = textShape.getText().getTextStyle();
+        textStyle.setFontFamily(shapeStyle.getFontFamily());
+        textStyle.setFontSize(shapeStyle.getFontSize());
+        //textStyle.setFontWeight(shapeStyle.getFontWeight());
+
+        if (cwvTextType.hasOwnProperty(shapeId)) {
+          const textColor = colorForCWV(cwvTextType[shapeId], textValue);
+          textStyle.setForegroundColor(textColor);
+          
+          const formattedCWV = textFormatForCWV(cwvTextType[shapeId], textValue);
+          newTextBox.getText().setText(formattedCWV);
+        } else {
+          textStyle.setForegroundColor("#1f2023");
+        }
+      } 
+    }
+  }
+
+}
+
+/**
+ * Determines a color based on if a value is a Good, Needs Improvement or Poor
+ * range for a given metric.
+ *
+ * @param {Array} range Array with a low and high threshold for a CWV metric
+ * @param {Number} value Number indicating the metric score
+ * @return {Array} Array of RBG values in decimal form
+ */
+function colorForCWV([lowThreshold, highThreshold], value) {
+  if (!value) {
+    return COLORS.WHITE;
+  } else if (value <= lowThreshold) {
+    return COLORS.GREEN;
+  } else if (value < highThreshold) {
+    return COLORS.YELLOW;
+  } else {
+    return COLORS.RED;
+  }
+}
+
+/**
+ * Converts a Core Web Vitals value to a human-readable string.
+ *
+ * @param {CWV} cwv The Core Web Vitals metric.
+ * @param {number} value The value of the metric.
+ * @returns {string} The human-readable string.
+ */
+function textFormatForCWV(cwv, value) {
+  switch(cwv) {
+    case CWV.LCP:
+      return value/1000 + "s";
+    case CWV.FID:
+      return value + "ms";
+    case CWV.CLS:
+      return value;
+    case CWV.INP:
+      return value + "ms";
+    default:
+      return value;
+  }
+}
+
+// ----- Post deck creation styling function
 /**
  * Applies any extra operations to the deck based on the specifics of the audit
  *

@@ -74,6 +74,7 @@ function createDeckFromDatasources() {
   }
 
   applyCustomStyle(newDeckId);
+  recordDeckCreated(newDeckId);
 }
 
 /**
@@ -278,33 +279,18 @@ function parseFieldsAndCreateCollectionSlide(
 
   // Add title
   const titleColumn = documentProperties.getProperty('TITLE_COLUMN');
-  if (titleColumn && titleColumn.length > 0) {
-    const title = row[titleColumn - 1];
-    const slideTitlePlaceholder =
-        slide.getPlaceholder(SlidesApp.PlaceholderType.TITLE);
-    const slideTitle = slideTitlePlaceholder.asShape().getText();
-    slideTitle.setText(title);
-  }
+  const titleText = row[titleColumn - 1];
+  addTextToPlaceholder(slide, SlidesApp.PlaceholderType.TITLE, titleText, '');
 
   // Add subtitle
   const subtitleColumn = documentProperties.getProperty('SUBTITLE_COLUMN');
-  if (subtitleColumn && subtitleColumn.length > 0) {
-    const subtitle = row[subtitleColumn - 1];
-    const slideSubtitlePlaceholder =
-        slide.getPlaceholder(SlidesApp.PlaceholderType.SUBTITLE);
-    const slideSubtitle = slideSubtitlePlaceholder.asShape().getText();
-    slideSubtitle.setText(subtitle);
-  }
+  const subtitleText = row[subtitleColumn - 1];
+  addTextToPlaceholder(slide, SlidesApp.PlaceholderType.SUBTITLE, subtitleText, '');
 
   // Add body
   const bodyColumn = documentProperties.getProperty('BODY_COLUMN');
-  if (bodyColumn && bodyColumn.length > 0) {
-    const body = row[bodyColumn - 1];
-    const slideBodyPlaceholder =
-        slide.getPlaceholder(SlidesApp.PlaceholderType.BODY);
-    const slideBody = slideBodyPlaceholder.asShape().getText();
-    slideBody.setText(body);
-  }
+  const bodyText = row[bodyColumn - 1];
+  addTextToPlaceholder(slide, SlidesApp.PlaceholderType.BODY, bodyText, '');
 
   // Add images
   const imageShapesArray = documentProperties.getProperty('IMAGE_SHAPES')

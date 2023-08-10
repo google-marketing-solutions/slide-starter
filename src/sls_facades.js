@@ -159,6 +159,24 @@ function loadConfiguration(rangeName = RANGE_NAME) {
   }
 }
 
+/**
+ * Adds text to the specified placeholder on the slide.
+ *
+ * @param {Slide} slide The slide to add the text to.
+ * @param {SlidesApp.PlaceholderType} placeholderType The type of placeholder to add the text to.
+ * @param {string} text The text to add to the placeholder.
+ * @param {string} defaultValue The default text to add to the placeholder if `text` is empty.
+ */
+function addTextToPlaceholder(slide, placeholderType, text, defaultValue) {
+  const placeholder = slide.getPlaceholder(placeholderType);
+  if (text && text.length > 0) {
+    placeholder.asShape().setText(text);
+  } else {
+    placeholder.asShape().setText(defaultValue);
+  }
+}
+
+
 // Drive
 /**
  * Returns a file, which is assumed to be an image file, for a criteria client
@@ -234,9 +252,6 @@ function isValidImageUrl(url) {
 }
 
 // Katalyst helpers
-
-
-
 /**
  * Creates a subsection header slide within a specified deck
  * and appends it.
@@ -275,6 +290,12 @@ function customDataInjection(newDeckId) {
   }
 }
 
+/**
+ * Determines whether the script should create a slide for this row in the collection based on whether title, subtitle, or body column have been defined.
+ * Only one of them should be in order to create a slide.
+ * 
+ * @returns {boolean} Whether the script should create a slide for that row in the collection
+ */
 function shouldCreateCollectionSlide() {
   const titleColumn = documentProperties.getProperty('TITLE_COLUMN');
   const subtitleColumn = documentProperties.getProperty('SUBTITLE_COLUMN');
@@ -345,5 +366,27 @@ function filterAndSortData(sheet = undefined) {
         .setColumnFilterCriteria(
             documentProperties.getProperty('FILTER_COLUMN'),
             failingFilterCriteria);
+  }
+}
+
+// ---- Other helpers
+
+/**
+ * Determines a color based on if a value is a Good, Needs Improvement or Poor
+ * range for a given metric.
+ *
+ * @param {Array} range Array with a low and high threshold for a CWV metric
+ * @param {Number} value Number indicating the metric score
+ * @return {Array} Array of RBG values in decimal form
+ */
+function colorForCWV([lowThreshold, highThreshold], value) {
+  if (!value.trim()) {
+    return COLORS.WHITE;
+  } else if (value <= lowThreshold) {
+    return COLORS.GREEN;
+  } else if (value < highThreshold) {
+    return COLORS.YELLOW;
+  } else {
+    return COLORS.RED;
   }
 }

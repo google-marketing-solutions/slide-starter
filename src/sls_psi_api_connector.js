@@ -19,7 +19,7 @@ const RESULTS_TAB = "Performance Results";
 */
 function getPsiApiKey() {
  const documentProperties = PropertiesService.getDocumentProperties();
- /** @type {string} */ documentProperties.getProperty('PSI_API_KEY');
+ const key = /** @type {string} */ documentProperties.getProperty('PSI_API_KEY');
  if (!key.trim()) {
    SpreadsheetApp.getUi().alert("Please enter your API Key");
    throw new Error("The PSI API key must be set to use this tool.");
@@ -33,9 +33,11 @@ function getPsiApiKey() {
 function runPSITests() {
  const urlSettings = getURLSettings();
  const responses = submitTests(urlSettings);
- const sheet = SpreadsheetApp.getActive().getSheetByName(RESULTS_TAB);
  const today = new Date().toISOString().slice(0, 10);
- const responseMap = createResultsMap()
+ const responseMap = createResultsMap(); 
+ const sheet = SpreadsheetApp.getActive().getSheetByName(RESULTS_TAB);
+ sheet.deleteRows(2,sheet.getLastRow()-1);
+ 
  // There should be one response for each row of urlSettings.
  for (let i = 0; i < responses.length; i++) {
    const url = urlSettings[i][0]; // A
@@ -61,12 +63,12 @@ function runPSITests() {
     } else if (results.origin_fallback) {
       cruxDataType = 'ORIGIN';
     }
-    const resultsData = [url, label, device, today, cruxDataType, ...results.data];
+    //Only used for Katalyst
+    const subtitleSummary = device.toLowerCase() + " - " + cruxDataType.toLowerCase();
+    const resultsData = [url, label, device, today, cruxDataType, ...results.data, subtitleSummary];
     sheet.appendRow(resultsData); 
    }
  }
-
- const results = SpreadsheetApp.getActive().getSheetByName(RESULTS_TAB);
 }
 
 /**
@@ -163,7 +165,7 @@ function parseResults(content, responseMap) {
        }
        crux.push(percentile);
      } else {
-       crux.push([, , , , ,]); // filler for the sheet if the metric isn't there
+       crux.push("N/A");
      }
    });
    // If there's insufficient field data for the page, the API responds with
