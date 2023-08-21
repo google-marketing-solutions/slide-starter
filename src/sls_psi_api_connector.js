@@ -1,4 +1,21 @@
 /**
+ * @license
+ * Copyright 2023 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
  * @typedef {{
 *            error: {message: string}} |
 *            {lighthouseResult: !Object, loadingExperience: !Object}}
@@ -21,7 +38,7 @@ function getPsiApiKey() {
  const documentProperties = PropertiesService.getDocumentProperties();
  const key = /** @type {string} */ documentProperties.getProperty('PSI_API_KEY');
  if (!key.trim()) {
-   SpreadsheetApp.getUi().alert("Please enter your API Key");
+   SpreadsheetApp.getUi().alert("Please enter your PSI API Key in Configuration");
    throw new Error("The PSI API key must be set to use this tool.");
  }
  return key;
@@ -236,19 +253,3 @@ function createResultsMap() {
   requiredResultsMap.set("crux", crux);
   return requiredResultsMap;
 }
-
-//  audits = [];
-//  failedAuditNames.forEach((failedAuditName) => {
-//   audits.push(lighthouseResult["audits"][failedAuditName].title);
-//  });
- // const resources =
- //   lighthouseResult["audits"]["resource-summary"]["details"]["items"];
- // const assetsObject = Object.fromEntries(
- //   resources.map((resource) => [resource.resourceType, resource])
- // );
- // const assets = [];
- // responseMap.get("assets").forEach((assetType) => {
- //   const transferSize = assetsObject[assetType]["transferSize"] / 1024;
- //   assets.push(transferSize, assetsObject[assetType]["requestCount"]);
- // });
- 

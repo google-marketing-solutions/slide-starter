@@ -68,6 +68,16 @@ function onEdit(e) {
 
 // ----- Performance post-slide function
 
+/**
+ * This is a post slide-creation function hook intended to apply custom styles to extra text fields that were created.
+ * It receives any extra arguments that were defined as an object in the configuration sheet (or source, in the future).
+ * Since only the standard placeholders retain style after creation (other text fields are copied based on transform of the shape),
+ * this is necessary to ensure custom styling.
+ * 
+ * @param {Slide} slide Slide to be modified
+ * @param {Array} row Row of information from data source
+ * @param {Array} postSlideFunctionArgs Extra information passed down through the configuration sheet
+ */
 function customStyledTextFields(slide, row, postSlideFunctionArgs) {
   const textFields = postSlideFunctionArgs;
   const textShapesArray = textFields.shapes;
@@ -106,7 +116,6 @@ function customStyledTextFields(slide, row, postSlideFunctionArgs) {
       } 
     }
   }
-
 }
 
 /**
