@@ -20,10 +20,10 @@ const CWV = {
 };
 
 const cwvTextType = {
-  "CRUX_FID": CWV.FID,
-  "CRUX_CLS": CWV.CLS,
-  "CRUX_INP": CWV.INP,
-  "CRUX_LCP": CWV.LCP,
+  'CRUX_FID': CWV.FID,
+  'CRUX_CLS': CWV.CLS,
+  'CRUX_INP': CWV.INP,
+  'CRUX_LCP': CWV.LCP,
 };
 
 /**
@@ -31,17 +31,17 @@ const cwvTextType = {
  * Used in coloring the table for CrUX CWV data.
  */
 const COLORS = {
-  GREEN: "#34A853", // Good
-  YELLOW: "#FBBC04", // Needs Improvement
-  RED: "#EA4335", // Poor
-  WHITE: "#F8F9FA", // None
+  GREEN: '#34A853', // Good
+  YELLOW: '#FBBC04', // Needs Improvement
+  RED: '#EA4335', // Poor
+  WHITE: '#F8F9FA', // None
 };
 
 /**
  * A special function that runs whenever a change on the spreadsheet is detected
- * In this case we will use it to handle the modification of adding or removing 
+ * In this case we will use it to handle the modification of adding or removing
  * types of audit into Katalyst.
- * 
+ *
  * As a temporary solution while we manage access to an API to record telemetry
  * we will look at changes at the telemetry sheet to make sure that an installable
  * trigger can be executed as a user with permissions to store the telemetry data
@@ -51,13 +51,13 @@ function onEdit(e) {
   const currentSheetName = e.source.getActiveSheet().getName();
   if (currentSheetName != 'Audit Start') {
     return;
-  } 
+  }
   const currentColumn = e.range.columnStart;
-  if (currentColumn != 1) { 
+  if (currentColumn != 1) {
     return;
   }
   const value = e.range.getValue();
-  const targetSheetName = e.range.offset(0,1).getValue();
+  const targetSheetName = e.range.offset(0, 1).getValue();
   const sheet = e.source.getSheetByName(targetSheetName);
   const _ = (value) ? sheet.showSheet() : sheet.hideSheet();
 }
@@ -73,7 +73,7 @@ function onEdit(e) {
  * It receives any extra arguments that were defined as an object in the configuration sheet (or source, in the future).
  * Since only the standard placeholders retain style after creation (other text fields are copied based on transform of the shape),
  * this is necessary to ensure custom styling.
- * 
+ *
  * @param {Slide} slide Slide to be modified
  * @param {Array} row Row of information from data source
  * @param {Array} postSlideFunctionArgs Extra information passed down through the configuration sheet
@@ -88,32 +88,32 @@ function customStyledTextFields(slide, row, postSlideFunctionArgs) {
     const column = textColumnsArray[i];
     if (shapeId && column) {
       const textShape = retrieveShape(slide, shapeId);
-      let textValue = row[column - 1].toString();
+      const textValue = row[column - 1].toString();
       if (textValue) {
         const newTextBox = slide.insertTextBox(textValue, textShape.getLeft(), textShape.getTop(),
-          textShape.getWidth(), textShape.getHeight());
-        
-        //Centers text
-        newTextBox.getText().getParagraphStyle()
-          .setParagraphAlignment(SlidesApp.ParagraphAlignment.CENTER);
+            textShape.getWidth(), textShape.getHeight());
 
-        //Sets style and CWV-speficic formatting
+        // Centers text
+        newTextBox.getText().getParagraphStyle()
+            .setParagraphAlignment(SlidesApp.ParagraphAlignment.CENTER);
+
+        // Sets style and CWV-speficic formatting
         const textStyle = newTextBox.getText().getTextStyle();
         const shapeStyle = textShape.getText().getTextStyle();
         textStyle.setFontFamily(shapeStyle.getFontFamily());
         textStyle.setFontSize(shapeStyle.getFontSize());
-        //textStyle.setFontWeight(shapeStyle.getFontWeight());
+        // textStyle.setFontWeight(shapeStyle.getFontWeight());
 
         if (cwvTextType.hasOwnProperty(shapeId)) {
           const textColor = colorForCWV(cwvTextType[shapeId], textValue);
           textStyle.setForegroundColor(textColor);
-          
+
           const formattedCWV = textFormatForCWV(cwvTextType[shapeId], textValue);
           newTextBox.getText().setText(formattedCWV);
         } else {
-          textStyle.setForegroundColor("#1f2023");
+          textStyle.setForegroundColor('#1f2023');
         }
-      } 
+      }
     }
   }
 }
@@ -143,18 +143,18 @@ function colorForCWV([lowThreshold, highThreshold], value) {
  *
  * @param {CWV} cwv The Core Web Vitals metric.
  * @param {number} value The value of the metric.
- * @returns {string} The human-readable string.
+ * @return {string} The human-readable string.
  */
 function textFormatForCWV(cwv, value) {
-  switch(cwv) {
+  switch (cwv) {
     case CWV.LCP:
-      return value/1000 + "s";
+      return value/1000 + 's';
     case CWV.FID:
-      return value + "ms";
+      return value + 'ms';
     case CWV.CLS:
       return value;
     case CWV.INP:
-      return value + "ms";
+      return value + 'ms';
     default:
       return value;
   }

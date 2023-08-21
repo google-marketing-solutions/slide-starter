@@ -23,8 +23,8 @@
 let PsiResult;
 
 // Global variables used throughout the solution.
-const CLIENT_REQUESTS_SHEET = "Performance";
-const RESULTS_TAB = "Performance Results";
+const CLIENT_REQUESTS_SHEET = 'Performance';
+const RESULTS_TAB = 'Performance Results';
 
 /**
 * Reads PSI API Key from the Sheet.
@@ -35,57 +35,57 @@ const RESULTS_TAB = "Performance Results";
 * @return {string} the API Key to use with PSI.
 */
 function getPsiApiKey() {
- const documentProperties = PropertiesService.getDocumentProperties();
- const key = /** @type {string} */ documentProperties.getProperty('PSI_API_KEY');
- if (!key.trim()) {
-   SpreadsheetApp.getUi().alert("Please enter your PSI API Key in Configuration");
-   throw new Error("The PSI API key must be set to use this tool.");
- }
- return key;
+  const documentProperties = PropertiesService.getDocumentProperties();
+  const key = /** @type {string} */ documentProperties.getProperty('PSI_API_KEY');
+  if (!key.trim()) {
+    SpreadsheetApp.getUi().alert('Please enter your PSI API Key in Configuration');
+    throw new Error('The PSI API key must be set to use this tool.');
+  }
+  return key;
 }
 
 /**
 * Triggers the tests and outputs the results to the Sheet.
 */
 function runPSITests() {
- const urlSettings = getURLSettings();
- const responses = submitTests(urlSettings);
- const today = new Date().toISOString().slice(0, 10);
- const responseMap = createResultsMap(); 
- const sheet = SpreadsheetApp.getActive().getSheetByName(RESULTS_TAB);
- sheet.deleteRows(2,sheet.getLastRow()-1);
- 
- // There should be one response for each row of urlSettings.
- for (let i = 0; i < responses.length; i++) {
-   const url = urlSettings[i][0]; // A
-   const label = urlSettings[i][1]; // B
-   const device = urlSettings[i][2]; // C
+  const urlSettings = getURLSettings();
+  const responses = submitTests(urlSettings);
+  const today = new Date().toISOString().slice(0, 10);
+  const responseMap = createResultsMap();
+  const sheet = SpreadsheetApp.getActive().getSheetByName(RESULTS_TAB);
+  sheet.deleteRows(2, sheet.getLastRow()-1);
 
-   const content = /** @type {!PsiResult} */ (
-     JSON.parse(responses[i].getContentText())
-   );
-   if (content.error) {
-     sheet.appendRow([url, label, device]);
-     const note =
+  // There should be one response for each row of urlSettings.
+  for (let i = 0; i < responses.length; i++) {
+    const url = urlSettings[i][0]; // A
+    const label = urlSettings[i][1]; // B
+    const device = urlSettings[i][2]; // C
+
+    const content = /** @type {!PsiResult} */ (
+      JSON.parse(responses[i].getContentText())
+    );
+    if (content.error) {
+      sheet.appendRow([url, label, device]);
+      const note =
        `${content.error.message}\n\n` +
-       "If this error persists, investigate the cause by running the " +
-       "URL manually via " +
-       "https://developers.google.com/speed/pagespeed/insights/";
-     addNote(note, "#fdf6f6"); // light red background
-   } else {
-     const results = parseResults(content, responseMap);
-     let cruxDataType = 'PAGE';
-     if (!results.crux_data) {
-      cruxDataType = 'NONE';
-    } else if (results.origin_fallback) {
-      cruxDataType = 'ORIGIN';
+       'If this error persists, investigate the cause by running the ' +
+       'URL manually via ' +
+       'https://developers.google.com/speed/pagespeed/insights/';
+      addNote(note, '#fdf6f6'); // light red background
+    } else {
+      const results = parseResults(content, responseMap);
+      let cruxDataType = 'PAGE';
+      if (!results.crux_data) {
+        cruxDataType = 'NONE';
+      } else if (results.origin_fallback) {
+        cruxDataType = 'ORIGIN';
+      }
+      // Only used for Katalyst
+      const subtitleSummary = device.toLowerCase() + ' - ' + cruxDataType.toLowerCase();
+      const resultsData = [url, label, device, today, cruxDataType, ...results.data, subtitleSummary];
+      sheet.appendRow(resultsData);
     }
-    //Only used for Katalyst
-    const subtitleSummary = device.toLowerCase() + " - " + cruxDataType.toLowerCase();
-    const resultsData = [url, label, device, today, cruxDataType, ...results.data, subtitleSummary];
-    sheet.appendRow(resultsData); 
-   }
- }
+  }
 }
 
 /**
@@ -95,16 +95,16 @@ function runPSITests() {
 *     for each URL.
 */
 function getURLSettings() {
- const sheet = SpreadsheetApp.getActive().getSheetByName(
-   CLIENT_REQUESTS_SHEET
- );
- const lastColumn = sheet.getLastColumn();
- let lastRow = sheet.getLastRow() - 1;
- const range = sheet.getRange(2, 1, lastRow, lastColumn);
- const settings = /** @type {!Array<!Array<(string | number)>>} */ (
-   range.getValues()
- );
- return settings;
+  const sheet = SpreadsheetApp.getActive().getSheetByName(
+      CLIENT_REQUESTS_SHEET,
+  );
+  const lastColumn = sheet.getLastColumn();
+  const lastRow = sheet.getLastRow() - 1;
+  const range = sheet.getRange(2, 1, lastRow, lastColumn);
+  const settings = /** @type {!Array<!Array<(string | number)>>} */ (
+    range.getValues()
+  );
+  return settings;
 }
 
 /**
@@ -120,14 +120,14 @@ function getURLSettings() {
 *     from PSI.
 */
 function submitTests(settings) {
- const key = getPsiApiKey();
- const categories = "&category=BEST_PRACTICES" + "&category=PERFORMANCE";
- const serverURLs = settings.map(([url, unused, device]) => ({
-   url: `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?${categories}&strategy=${device}&url=${url}&key=${key}`,
-   muteHttpExceptions: true,
- }));
- const responses = UrlFetchApp.fetchAll(serverURLs);
- return responses;
+  const key = getPsiApiKey();
+  const categories = '&category=BEST_PRACTICES' + '&category=PERFORMANCE';
+  const serverURLs = settings.map(([url, unused, device]) => ({
+    url: `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?${categories}&strategy=${device}&url=${url}&key=${key}`,
+    muteHttpExceptions: true,
+  }));
+  const responses = UrlFetchApp.fetchAll(serverURLs);
+  return responses;
 }
 
 /**
@@ -143,56 +143,56 @@ function submitTests(settings) {
 *     was reported.
 */
 function parseResults(content, responseMap) {
- const allResults = {
-   data: [],
-   crux_data: false,
-   origin_fallback: false,
- };
- const { lighthouseResult, loadingExperience } = content;
- const version = lighthouseResult["lighthouseVersion"];
- const screenshot = lighthouseResult["audits"]["final-screenshot"]["details"]["data"];
- const categories = [];
- responseMap.get("categories").forEach((category) => {
-   const score = lighthouseResult["categories"][category]["score"] * 100;
-   categories.push(score);
- });
- const metrics = [];
- responseMap.get("metrics").forEach((metric) => {
-   const value = lighthouseResult["audits"][metric]["numericValue"];
-   metrics.push(value);
- });
- const auditKeys = Object.keys(lighthouseResult["audits"]);
- const failedAuditNames = auditKeys.filter((auditName) => {
-  const score = lighthouseResult["audits"][auditName].score;
-  if (score < 1 && score != null) {
-    return auditName;
-  }
- });
+  const allResults = {
+    data: [],
+    crux_data: false,
+    origin_fallback: false,
+  };
+  const {lighthouseResult, loadingExperience} = content;
+  const version = lighthouseResult['lighthouseVersion'];
+  const screenshot = lighthouseResult['audits']['final-screenshot']['details']['data'];
+  const categories = [];
+  responseMap.get('categories').forEach((category) => {
+    const score = lighthouseResult['categories'][category]['score'] * 100;
+    categories.push(score);
+  });
+  const metrics = [];
+  responseMap.get('metrics').forEach((metric) => {
+    const value = lighthouseResult['audits'][metric]['numericValue'];
+    metrics.push(value);
+  });
+  const auditKeys = Object.keys(lighthouseResult['audits']);
+  const failedAuditNames = auditKeys.filter((auditName) => {
+    const score = lighthouseResult['audits'][auditName].score;
+    if (score < 1 && score != null) {
+      return auditName;
+    }
+  });
 
- const crux = [];
- if (loadingExperience["metrics"]) {
-   allResults.crux_data = true;
-   crux.push(loadingExperience["overall_category"]);
-   responseMap.get("crux").forEach((metricName) => {
-     if (loadingExperience["metrics"][metricName]) {
-       const metric = loadingExperience["metrics"][metricName];
-       let percentile = metric["percentile"];
-       if (metricName === "CUMULATIVE_LAYOUT_SHIFT_SCORE") {
-         percentile = percentile / 100;
-       }
-       crux.push(percentile);
-     } else {
-       crux.push("N/A");
-     }
-   });
-   // If there's insufficient field data for the page, the API responds with
-   // origin-level field data and origin_fallback = true.
-   if (loadingExperience["origin_fallback"]) {
-     allResults.origin_fallback = true;
-   }
- }
- allResults.data = [screenshot, ...crux, ...categories, ...metrics, failedAuditNames.toString(), version];
- return allResults;
+  const crux = [];
+  if (loadingExperience['metrics']) {
+    allResults.crux_data = true;
+    crux.push(loadingExperience['overall_category']);
+    responseMap.get('crux').forEach((metricName) => {
+      if (loadingExperience['metrics'][metricName]) {
+        const metric = loadingExperience['metrics'][metricName];
+        let percentile = metric['percentile'];
+        if (metricName === 'CUMULATIVE_LAYOUT_SHIFT_SCORE') {
+          percentile = percentile / 100;
+        }
+        crux.push(percentile);
+      } else {
+        crux.push('N/A');
+      }
+    });
+    // If there's insufficient field data for the page, the API responds with
+    // origin-level field data and origin_fallback = true.
+    if (loadingExperience['origin_fallback']) {
+      allResults.origin_fallback = true;
+    }
+  }
+  allResults.data = [screenshot, ...crux, ...categories, ...metrics, failedAuditNames.toString(), version];
+  return allResults;
 }
 
 /**
@@ -203,10 +203,10 @@ function parseResults(content, responseMap) {
 *     hex. The default null value leaves the color as is.
 */
 function addNote(note, formatColor = null) {
- const sheet = SpreadsheetApp.getActive().getSheetByName(RESULTS_TAB);
- const lastRow = sheet.getLastRow();
- sheet.getRange(`${lastRow}:${lastRow}`).setBackground(formatColor);
- sheet.getRange(`D${lastRow}`).setNote(note);
+  const sheet = SpreadsheetApp.getActive().getSheetByName(RESULTS_TAB);
+  const lastRow = sheet.getLastRow();
+  sheet.getRange(`${lastRow}:${lastRow}`).setBackground(formatColor);
+  sheet.getRange(`D${lastRow}`).setNote(note);
 }
 
 /**
@@ -218,38 +218,38 @@ function addNote(note, formatColor = null) {
 * @return {!Map<string, !Map<string, number>>} The budget values in an object.
 */
 function createResultsMap() {
-  const categories = ["performance"];
+  const categories = ['performance'];
   const crux = [
-    "FIRST_CONTENTFUL_PAINT_MS",
-    "LARGEST_CONTENTFUL_PAINT_MS",
-    "FIRST_INPUT_DELAY_MS",
-    "CUMULATIVE_LAYOUT_SHIFT_SCORE",
-    "INTERACTION_TO_NEXT_PAINT",
+    'FIRST_CONTENTFUL_PAINT_MS',
+    'LARGEST_CONTENTFUL_PAINT_MS',
+    'FIRST_INPUT_DELAY_MS',
+    'CUMULATIVE_LAYOUT_SHIFT_SCORE',
+    'INTERACTION_TO_NEXT_PAINT',
   ];
   const metrics = [
-    "server-response-time",
-    "first-contentful-paint",
-    "largest-contentful-paint",
-    "total-blocking-time",
-    "cumulative-layout-shift"
+    'server-response-time',
+    'first-contentful-paint',
+    'largest-contentful-paint',
+    'total-blocking-time',
+    'cumulative-layout-shift',
   ];
   const assets = [
-    "total",
-    "script",
-    "image",
-    "stylesheet",
-    "document",
-    "font",
-    "other",
-    "media",
-    "third-party",
+    'total',
+    'script',
+    'image',
+    'stylesheet',
+    'document',
+    'font',
+    'other',
+    'media',
+    'third-party',
   ];
 
 
   const requiredResultsMap = new Map();
-  requiredResultsMap.set("categories", categories);
-  requiredResultsMap.set("metrics", metrics);
-  requiredResultsMap.set("assets", assets);
-  requiredResultsMap.set("crux", crux);
+  requiredResultsMap.set('categories', categories);
+  requiredResultsMap.set('metrics', metrics);
+  requiredResultsMap.set('assets', assets);
+  requiredResultsMap.set('crux', crux);
   return requiredResultsMap;
 }

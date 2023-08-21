@@ -32,7 +32,6 @@
  */
 
 
-
 // Document properties
 const documentProperties = PropertiesService.getDocumentProperties();
 
@@ -142,13 +141,13 @@ function createSlidesForDatasource(deck, insightDeck, slideLayout) {
  *
  */
 function createCollectionSlide(deck, insightDeck, slideLayout) {
-  //Execute the pre-collection creation hook
+  // Execute the pre-collection creation hook
   const preCollectionFunction = documentProperties.getProperty('PRE_COLLECTION_FUNCTION');
   if (preCollectionFunction && preCollectionFunction.length > 0) {
     const preCollectionFunctionArgsRaw = documentProperties.getProperty('PRE_COLLECTION_FUNCTION_ARGS');
     let preCollectionFunctionArgs;
     if (preCollectionFunctionArgsRaw && preCollectionFunctionArgsRaw.length > 0) {
-      preCollectionFunctionArgs = preCollectionFunctionArgsRaw.split(",");
+      preCollectionFunctionArgs = preCollectionFunctionArgsRaw.split(',');
     } else {
       preCollectionFunctionArgs = [];
     }
@@ -265,13 +264,13 @@ function createSingleSlide(deck, insightDeck, slideLayout) {
  */
 function parseFieldsAndCreateCollectionSlide(
     deck, slideLayout, row) {
-  //Execute the pre-slide creation hook
+  // Execute the pre-slide creation hook
   const preSlideFunction = documentProperties.getProperty('PRE_SLIDE_FUNCTION');
   if (preSlideFunction && preSlideFunction.length > 0) {
     getFunctionByName(preSlideFunction)(deck, slideLayout, row);
   }
 
-  //Create slide
+  // Create slide
   const slide = deck.appendSlide(slideLayout);
   if (deck.getMasters().length > 1) {
     deck.getMasters()[deck.getMasters().length - 1].remove();
@@ -310,8 +309,8 @@ function parseFieldsAndCreateCollectionSlide(
         let imageValue = row[column - 1];
         if (!imageValue) {
           imageValue = documentProperties.getProperty('DEFAULT_IMAGE_URL');
-        } else if (imageValue.split(",")[0] == "data:image/jpeg;base64") {
-          const imageBase64 = imageValue.split(",")[1];
+        } else if (imageValue.split(',')[0] == 'data:image/jpeg;base64') {
+          const imageBase64 = imageValue.split(',')[1];
           const decodedImage = Utilities.base64Decode(imageBase64);
           const imageBlob = Utilities.newBlob(decodedImage, MimeType.JPEG);
           imageValue = imageBlob;
@@ -345,18 +344,18 @@ function parseFieldsAndCreateCollectionSlide(
 
       if (shapeId && column) {
         const textShape = retrieveShape(slide, shapeId);
-        let textValue = row[column - 1];
+        const textValue = row[column - 1];
         if (textValue) {
           slide.insertTextBox(textValue, textShape.getLeft(), textShape.getTop(),
-            textShape.getWidth(), textShape.getHeight());
-        } 
+              textShape.getWidth(), textShape.getHeight());
+        }
       }
     }
   }
 
   const postSlideFunction = documentProperties.getProperty('POST_SLIDE_FUNCTION');
   if (postSlideFunction && postSlideFunction.length > 0) {
-    //Add extra arguments if any were specified at config
+    // Add extra arguments if any were specified at config
     const postSlideFunctionArgsRaw = documentProperties.getProperty('POST_SLIDE_FUNCTION_ARGS');
     let postSlideFunctionArgs = {};
     if (postSlideFunctionArgsRaw && postSlideFunctionArgsRaw.length > 0) {

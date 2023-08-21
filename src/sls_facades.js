@@ -27,44 +27,44 @@
  * @return {*}
  */
 function replaceSlideShapeWithSheetsChart(
-  presentationId, spreadsheetId, sheetChartId, slidePageId, slideChartShape) {
-const chartHeight = slideChartShape.getInherentHeight();
-const chartWidth = slideChartShape.getInherentWidth();
-const chartTransform = slideChartShape.getTransform();
-const presentationChartId = 'chart-test';
-const requests = [{
-  createSheetsChart: {
-    objectId: presentationChartId,
-    spreadsheetId: spreadsheetId,
-    chartId: sheetChartId,
-    linkingMode: 'LINKED',
-    elementProperties: {
-      pageObjectId: slidePageId,
-      size: {
-        width: {magnitude: chartHeight, unit: 'PT'},
-        height: {magnitude: chartWidth, unit: 'PT'},
-      },
-      transform: {
-        scaleX: chartTransform.getScaleX(),
-        scaleY: chartTransform.getScaleY(),
-        translateX: chartTransform.getTranslateX(),
-        translateY: chartTransform.getTranslateY(),
-        unit: 'PT',
+    presentationId, spreadsheetId, sheetChartId, slidePageId, slideChartShape) {
+  const chartHeight = slideChartShape.getInherentHeight();
+  const chartWidth = slideChartShape.getInherentWidth();
+  const chartTransform = slideChartShape.getTransform();
+  const presentationChartId = 'chart-test';
+  const requests = [{
+    createSheetsChart: {
+      objectId: presentationChartId,
+      spreadsheetId: spreadsheetId,
+      chartId: sheetChartId,
+      linkingMode: 'LINKED',
+      elementProperties: {
+        pageObjectId: slidePageId,
+        size: {
+          width: {magnitude: chartHeight, unit: 'PT'},
+          height: {magnitude: chartWidth, unit: 'PT'},
+        },
+        transform: {
+          scaleX: chartTransform.getScaleX(),
+          scaleY: chartTransform.getScaleY(),
+          translateX: chartTransform.getTranslateX(),
+          translateY: chartTransform.getTranslateY(),
+          unit: 'PT',
+        },
       },
     },
-  },
-}];
+  }];
 
-// Execute the request.
-try {
-  const batchUpdateResponse =
+  // Execute the request.
+  try {
+    const batchUpdateResponse =
       Slides.Presentations.batchUpdate({requests: requests}, presentationId);
-  console.log('Added a linked Sheets chart with ID: %s', presentationChartId);
-  slideChartShape.remove();
-  return batchUpdateResponse;
-} catch (err) {
-  console.log('Failed with error: %s', err);
-}
+    console.log('Added a linked Sheets chart with ID: %s', presentationChartId);
+    slideChartShape.remove();
+    return batchUpdateResponse;
+  } catch (err) {
+    console.log('Failed with error: %s', err);
+  }
 }
 
 /**
@@ -84,7 +84,7 @@ function retrieveShape(slide, typeString) {
       return shape;
     }
   }
-  throw new Error(ERROR_NO_SHAPE + " " + typeString);
+  throw new Error(ERROR_NO_SHAPE + ' ' + typeString);
 }
 
 
@@ -238,7 +238,7 @@ function retrieveImageFromFolder(folder, imageName) {
 }
 
 
-// Generic 
+// Generic
 
 /**
  * Gets a function by name.
@@ -308,8 +308,8 @@ function customDataInjection(newDeckId) {
 /**
  * Determines whether the script should create a slide for this row in the collection based on whether title, subtitle, or body column have been defined.
  * Only one of them should be in order to create a slide.
- * 
- * @returns {boolean} Whether the script should create a slide for that row in the collection
+ *
+ * @return {boolean} Whether the script should create a slide for that row in the collection
  */
 function shouldCreateCollectionSlide() {
   const titleColumn = documentProperties.getProperty('TITLE_COLUMN');
