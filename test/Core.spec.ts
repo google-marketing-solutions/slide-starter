@@ -14,7 +14,7 @@ globalThis.PropertiesService = {
   },
 };
 
-const core = rewire("../src/sls_core.js");
+const core = rewire("../src/sls_facades.js");
 const getTemplateLayoutId = core.__get__("getTemplateLayoutId");
 
 describe("Core library", function () {
