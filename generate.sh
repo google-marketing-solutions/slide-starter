@@ -37,6 +37,8 @@ function check_login () {
 
 # Function to copy files from the main codebase into the clasp folder
 function copy_files () {
+  cp "../src/upload.html" .
+  cp "../src/sls_sheet_ui.js" "sls_sheet_ui.js"
   cp "../src/sls_core.js" "sls_core.js"
   cp "../src/sls_facades.js" "sls_facades.js"
   cp "../src/sls_strings.js" "sls_strings.js"

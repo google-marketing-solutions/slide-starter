@@ -44,6 +44,8 @@ function onOpen() {
     },
   ];
   spreadsheet.addMenu('Katalyst', menuItems);
+
+  sheetUI();
 }
 
 /**
@@ -111,9 +113,14 @@ function parseFieldsAndCreateSlide(
       (row[criteriaImageMockupIndex] === '' ? criteriaDefaultImageUrl :
                                               row[criteriaImageMockupIndex]);
   const insights = row[criteriaInsightSlidesIndex].split(',');
-  const folder = DriveApp.getFileById(SpreadsheetApp.getActive().getId())
+  let folder = DriveApp.getFileById(SpreadsheetApp.getActive().getId())
       .getParents()
       .next();
+  // use Images folder instead of root if exists
+  const imagesFolders = folder.getFoldersByName('Images');
+  if (!imagesFolders.hasNext()) {
+    folder = imagesFolders.next();
+  }
   const clientImage = retrieveClientImage(folder, criteriaId);
   createRecommendationSlideGAS(
       deck, recommendationSlideLayout, criteria, applicable, description,

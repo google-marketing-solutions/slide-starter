@@ -1,5 +1,5 @@
 /**
- * @fileoverview Description of this file.
+ * @fileoverview Web implementation.
  */
 
 /* exported applyCustomStyle */
@@ -30,6 +30,7 @@ function onOpen() {
       },
     ];
     spreadsheet.addMenu('Performance Starter', menuItems);
+    sheetUI();
   } catch (error) {
     throw new Error('onOpen failed: ' + error.toString());
   }
@@ -80,8 +81,7 @@ const COLORS = {
  */
 function parseFieldsAndCreateSlide(
     deck, insightDeck, recommendationSlideLayout, row) {
-  const criteriaNameIndex =
-      documentProperties.getProperty('TITLE_COLUMN') - 1;
+  const criteriaNameIndex = documentProperties.getProperty('TITLE_COLUMN') - 1;
   const criteriaAppliesIndex =
       documentProperties.getProperty('SUBTITLE_COLUMN') - 1;
   const criteriaProblemStatementIndex =
@@ -94,14 +94,17 @@ function parseFieldsAndCreateSlide(
       documentProperties.getProperty('INSIGHT_SLIDE_ID_COLUMN') - 1;
 
   const criteria = row[criteriaNameIndex];
-  const applicable =
-      `Applies for: ${row[criteriaAppliesIndex].split(',').join(',')}`;
+  const applicable = row[criteriaAppliesIndex];
+  let potentialSubtitle = '';
+  if (applicable) {
+    potentialSubtitle = `Applies for: ${applicable}`;
+  }
   const description = row[criteriaProblemStatementIndex];
   const learnMore = row[criteriaSolutionStatementIndex];
   const insights = row[criteriaInsightSlidesIndex].split(',');
 
   createRecommendationSlideGAS(
-      deck, recommendationSlideLayout, criteria, applicable, description,
+      deck, recommendationSlideLayout, criteria, potentialSubtitle, description,
       learnMore, insights);
   if (insights.length > 0) {
     appendInsightSlides(deck, insightDeck, insights);
@@ -159,15 +162,15 @@ function createRecommendationSlideGAS(
 
   const titlePlaceholder =
       slide.getPlaceholder(SlidesApp.PlaceholderType.TITLE);
-  // const subtitlePlaceholder =
-  //     slide.getPlaceholder(SlidesApp.PlaceholderType.SUBTITLE);
+  const subtitlePlaceholder =
+      slide.getPlaceholder(SlidesApp.PlaceholderType.SUBTITLE);
   const bodyPlaceholder = slide.getPlaceholder(SlidesApp.PlaceholderType.BODY);
 
   const titleRange = titlePlaceholder.asShape().getText();
   titleRange.setText(criteria);
 
-  // const subtitleRange = subtitlePlaceholder.asShape().getText();
-  // subtitleRange.setText(applicable);
+  const subtitleRange = subtitlePlaceholder.asShape().getText();
+  subtitleRange.setText(applicable);
 
   const bodyRange = bodyPlaceholder.asShape().getText();
   bodyRange.setText(description);
