@@ -7,6 +7,10 @@
  * UX Starter V7 - 04/04/23
  */
 
+/* exported onEdit */
+/* exported customStyledTextFields */
+/* exported applyCustomStyle */
+
 /**
  * Object whose keys represent Core Web Vital metrics and values are Arrays that
  * contain the low & high thresholds for that metric. Used in coloring the table
@@ -43,9 +47,12 @@ const COLORS = {
  * types of audit into Katalyst.
  *
  * As a temporary solution while we manage access to an API to record telemetry
- * we will look at changes at the telemetry sheet to make sure that an installable
- * trigger can be executed as a user with permissions to store the telemetry data
- * from the different sheets on a file that other users would not have access to.
+ * we will look at changes at the telemetry sheet to make sure that an
+ * installable trigger can be executed as a user with permissions to store the
+ * telemetry data from the different sheets on a file that other users would not
+ * have access to.
+ *
+ * @param {!Event} e The onEdit event.
  */
 function onEdit(e) {
   const currentSheetName = e.source.getActiveSheet().getName();
@@ -59,7 +66,7 @@ function onEdit(e) {
   const value = e.range.getValue();
   const targetSheetName = e.range.offset(0, 1).getValue();
   const sheet = e.source.getSheetByName(targetSheetName);
-  const _ = (value) ? sheet.showSheet() : sheet.hideSheet();
+  (value) ? sheet.showSheet() : sheet.hideSheet();
 }
 
 // ----- Performance pre-collection function
@@ -69,14 +76,17 @@ function onEdit(e) {
 // ----- Performance post-slide function
 
 /**
- * This is a post slide-creation function hook intended to apply custom styles to extra text fields that were created.
- * It receives any extra arguments that were defined as an object in the configuration sheet (or source, in the future).
- * Since only the standard placeholders retain style after creation (other text fields are copied based on transform of the shape),
- * this is necessary to ensure custom styling.
+ * This is a post slide-creation function hook intended to apply custom styles
+ * to extra text fields that were created. It receives any extra arguments that
+ * were defined as an object in the configuration sheet (or source, in the
+ * future). Since only the standard placeholders retain style after creation
+ * (other text fields are copied based on transform of the shape), this is
+ * necessary to ensure custom styling.
  *
- * @param {Slide} slide Slide to be modified
- * @param {Array} row Row of information from data source
- * @param {Array} postSlideFunctionArgs Extra information passed down through the configuration sheet
+ * @param {!Slide} slide Slide to be modified
+ * @param {!Array<string>} row Row of information from data source
+ * @param {!Array<string>} postSlideFunctionArgs Extra information passed down
+ *     through the configuration sheet
  */
 function customStyledTextFields(slide, row, postSlideFunctionArgs) {
   const textFields = postSlideFunctionArgs;
@@ -90,12 +100,13 @@ function customStyledTextFields(slide, row, postSlideFunctionArgs) {
       const textShape = retrieveShape(slide, shapeId);
       const textValue = row[column - 1].toString();
       if (textValue) {
-        const newTextBox = slide.insertTextBox(textValue, textShape.getLeft(), textShape.getTop(),
+        const newTextBox = slide.insertTextBox(
+            textValue, textShape.getLeft(), textShape.getTop(),
             textShape.getWidth(), textShape.getHeight());
 
         // Centers text
-        newTextBox.getText().getParagraphStyle()
-            .setParagraphAlignment(SlidesApp.ParagraphAlignment.CENTER);
+        newTextBox.getText().getParagraphStyle().setParagraphAlignment(
+            SlidesApp.ParagraphAlignment.CENTER);
 
         // Sets style and CWV-speficic formatting
         const textStyle = newTextBox.getText().getTextStyle();
@@ -104,11 +115,12 @@ function customStyledTextFields(slide, row, postSlideFunctionArgs) {
         textStyle.setFontSize(shapeStyle.getFontSize());
         // textStyle.setFontWeight(shapeStyle.getFontWeight());
 
-        if (cwvTextType.hasOwnProperty(shapeId)) {
+        if (Object.prototype.hasOwnProperty.call(cwvTextType, shapeId)) {
           const textColor = colorForCWV(cwvTextType[shapeId], textValue);
           textStyle.setForegroundColor(textColor);
 
-          const formattedCWV = textFormatForCWV(cwvTextType[shapeId], textValue);
+          const formattedCWV =
+              textFormatForCWV(cwvTextType[shapeId], textValue);
           newTextBox.getText().setText(formattedCWV);
         } else {
           textStyle.setForegroundColor('#1f2023');
@@ -122,9 +134,9 @@ function customStyledTextFields(slide, row, postSlideFunctionArgs) {
  * Determines a color based on if a value is a Good, Needs Improvement or Poor
  * range for a given metric.
  *
- * @param {Array} range Array with a low and high threshold for a CWV metric
- * @param {Number} value Number indicating the metric score
- * @return {Array} Array of RBG values in decimal form
+ * @param {!Array} range Array with a low and high threshold for a CWV metric
+ * @param {number} value Number indicating the metric score
+ * @return {!Array} Array of RBG values in decimal form
  */
 function colorForCWV([lowThreshold, highThreshold], value) {
   if (!value) {
@@ -141,14 +153,14 @@ function colorForCWV([lowThreshold, highThreshold], value) {
 /**
  * Converts a Core Web Vitals value to a human-readable string.
  *
- * @param {CWV} cwv The Core Web Vitals metric.
+ * @param {!CWV} cwv The Core Web Vitals metric.
  * @param {number} value The value of the metric.
  * @return {string} The human-readable string.
  */
 function textFormatForCWV(cwv, value) {
   switch (cwv) {
     case CWV.LCP:
-      return value/1000 + 's';
+      return value / 1000 + 's';
     case CWV.FID:
       return value + 'ms';
     case CWV.CLS:
@@ -184,11 +196,11 @@ function applyCustomStyle(newDeckId) {
  * into the slide. The chart is taken from a sheet specified in the constants.
  * The slide is appended to the presentation specified by the deck parameter.
  *
- * @param {GoogleAppsScript.Slides.Presentation} deck The slide deck to which
+ * @param {!GoogleAppsScript.Slides.Presentation} deck The slide deck to which
  *     the slide should be appended.
- * @param {GoogleAppsScript.Slides.Presentation} insightDeck The slide deck that
- *     contains the insights slides to be used as context.
- * @param {GoogleAppsScript.Slides.PageElement} slideLayout The layout of the
+ * @param {!GoogleAppsScript.Slides.Presentation} insightDeck The slide deck
+ *     that contains the insights slides to be used as context.
+ * @param {!GoogleAppsScript.Slides.PageElement} slideLayout The layout of the
  *     slide to be created.
  */
 function parseFieldsAndCreateSlideSustainability(
@@ -224,9 +236,9 @@ function parseFieldsAndCreateSlideSustainability(
  * the configuration data from the document properties and uses the
  * recommendations sheet to calculate the values to be displayed in the chart.
  *
- * @param {GoogleAppsScript.Spreadsheet.Sheet} spreadsheet The sheet containing
+ * @param {!GoogleAppsScript.Spreadsheet.Sheet} spreadsheet The sheet containing
  *     the recommendations data.
- * @param {Array} values The array of values returned by the filter on the
+ * @param {!Array} values The array of values returned by the filter on the
  *     sheet.
  * @param {string} chartSheetName The name of the sheet that contains the chart
  *     to be used.

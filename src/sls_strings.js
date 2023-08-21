@@ -15,6 +15,12 @@
  * limitations under the License.
  */
 
+/* exported ERROR_MISSING_RANGE */
+/* exported ERROR_NO_SHAPE */
+/* exported RANGE_NAME */
+/* exported WARNING_NO_IMAGES */
+/* exported WARNING_MULTIPLE_IMAGES */
+
 // Error messages
 const ERROR_MISSING_RANGE = 'Couldn\'t find the named range in Configuration.';
 const ERROR_NO_SHAPE = 'There was a problem retrieving the shape layout.';

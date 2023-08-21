@@ -94,8 +94,7 @@ function prepareDependenciesAndCreateSlides(datasource, newDeckId) {
   let insightDeck;
   const insightsDeckId = documentProperties.getProperty('INSIGHTS_DECK_ID');
   if (insightsDeckId && insightsDeckId.length > 0) {
-    insightDeck =
-        SlidesApp.openById(insightsDeckId);
+    insightDeck = SlidesApp.openById(insightsDeckId);
   }
 
   createSlidesForDatasource(deck, insightDeck, recommendationSlideLayout);
@@ -106,11 +105,11 @@ function prepareDependenciesAndCreateSlides(datasource, newDeckId) {
  * function is called instead. Otherwise t creates either a single slide or a
  * collection slide based on the check in config.
  *
- * @param {Presentation} deck - The Slides deck where the new slide(s) will be
+ * @param {!Presentation} deck - The Slides deck where the new slide(s) will be
  *     created.
- * @param {Presentation} insightDeck - Extra deck to pull insight slides,
+ * @param {!Presentation} insightDeck - Extra deck to pull insight slides,
  *     retrieved only once.
- * @param {Layout} slideLayout - The slide layout to use for the new slide(s).
+ * @param {!Layout} slideLayout - The slide layout to use for the new slide(s).
  *
  */
 function createSlidesForDatasource(deck, insightDeck, slideLayout) {
@@ -133,25 +132,29 @@ function createSlidesForDatasource(deck, insightDeck, slideLayout) {
  * using the specified deck, insight deck, and slide layout. Filters and sorts
  * the data, and creates a slide for each row that passes the filter criteria.
  *
- * @param {Presentation} deck - The Slides deck where the new slide(s) will be
+ * @param {!Presentation} deck - The Slides deck where the new slide(s) will be
  *     created.
- * @param {Presentation} insightDeck - The Slides deck where the insight slide
+ * @param {!Presentation} insightDeck - The Slides deck where the insight slide
  *     will be created (if applicable).
- * @param {Layout} slideLayout - The slide layout to use for the new slide(s).
+ * @param {!Layout} slideLayout - The slide layout to use for the new slide(s).
  *
  */
 function createCollectionSlide(deck, insightDeck, slideLayout) {
   // Execute the pre-collection creation hook
-  const preCollectionFunction = documentProperties.getProperty('PRE_COLLECTION_FUNCTION');
+  const preCollectionFunction =
+      documentProperties.getProperty('PRE_COLLECTION_FUNCTION');
   if (preCollectionFunction && preCollectionFunction.length > 0) {
-    const preCollectionFunctionArgsRaw = documentProperties.getProperty('PRE_COLLECTION_FUNCTION_ARGS');
+    const preCollectionFunctionArgsRaw =
+        documentProperties.getProperty('PRE_COLLECTION_FUNCTION_ARGS');
     let preCollectionFunctionArgs;
-    if (preCollectionFunctionArgsRaw && preCollectionFunctionArgsRaw.length > 0) {
+    if (preCollectionFunctionArgsRaw &&
+        preCollectionFunctionArgsRaw.length > 0) {
       preCollectionFunctionArgs = preCollectionFunctionArgsRaw.split(',');
     } else {
       preCollectionFunctionArgs = [];
     }
-    getFunctionByName(preCollectionFunction)(deck, ...preCollectionFunctionArgs);
+    getFunctionByName(preCollectionFunction)(
+        deck, ...preCollectionFunctionArgs);
   }
   const spreadsheet = SpreadsheetApp.getActive().getSheetByName(
       documentProperties.getProperty('DATA_SOURCE_SHEET'));
@@ -181,10 +184,10 @@ function createCollectionSlide(deck, insightDeck, slideLayout) {
  * images to the slide.
  *
  *
- * @param {SlidesApp.Presentation} deck The presentation to add the slide to.
- * @param {SlidesApp.InsightDeck} insightDeck The insight deck that contains the
- *     data for the slide.
- * @param {SlidesApp.SlideLayout} slideLayout The layout to use for the slide.
+ * @param {!SlidesApp.Presentation} deck The presentation to add the slide to.
+ * @param {!SlidesApp.InsightDeck} insightDeck The insight deck that contains
+ *     the data for the slide.
+ * @param {!SlidesApp.SlideLayout} slideLayout The layout to use for the slide.
  *
  * @return {void}
  */
@@ -253,17 +256,14 @@ function createSingleSlide(deck, insightDeck, slideLayout) {
 /**
  * Creates a collection slide based on a slide layout and data from a specified
  * row in a Google Sheet.
- * @param {GoogleAppsScript.Slides.Presentation} deck - The slide deck to add
+ * @param {!GoogleAppsScript.Slides.Presentation} deck - The slide deck to add
  *     the slide to.
- * @param {GoogleAppsScript.Spreadsheet.Sheet} insightDeck - The sheet
- *     containing the data to populate the slide.
- * @param {GoogleAppsScript.Slides.Layout} slideLayout - The layout to use for
+ * @param {!GoogleAppsScript.Slides.Layout} slideLayout - The layout to use for
  *     the slide.
  * @param {!Array<string>} row Array of strings with information from the
  *     spreadsheet
  */
-function parseFieldsAndCreateCollectionSlide(
-    deck, slideLayout, row) {
+function parseFieldsAndCreateCollectionSlide(deck, slideLayout, row) {
   // Execute the pre-slide creation hook
   const preSlideFunction = documentProperties.getProperty('PRE_SLIDE_FUNCTION');
   if (preSlideFunction && preSlideFunction.length > 0) {
@@ -284,7 +284,8 @@ function parseFieldsAndCreateCollectionSlide(
   // Add subtitle
   const subtitleColumn = documentProperties.getProperty('SUBTITLE_COLUMN');
   const subtitleText = row[subtitleColumn - 1];
-  addTextToPlaceholder(slide, SlidesApp.PlaceholderType.SUBTITLE, subtitleText, '');
+  addTextToPlaceholder(
+      slide, SlidesApp.PlaceholderType.SUBTITLE, subtitleText, '');
 
   // Add body
   const bodyColumn = documentProperties.getProperty('BODY_COLUMN');
@@ -346,17 +347,20 @@ function parseFieldsAndCreateCollectionSlide(
         const textShape = retrieveShape(slide, shapeId);
         const textValue = row[column - 1];
         if (textValue) {
-          slide.insertTextBox(textValue, textShape.getLeft(), textShape.getTop(),
+          slide.insertTextBox(
+              textValue, textShape.getLeft(), textShape.getTop(),
               textShape.getWidth(), textShape.getHeight());
         }
       }
     }
   }
 
-  const postSlideFunction = documentProperties.getProperty('POST_SLIDE_FUNCTION');
+  const postSlideFunction =
+      documentProperties.getProperty('POST_SLIDE_FUNCTION');
   if (postSlideFunction && postSlideFunction.length > 0) {
     // Add extra arguments if any were specified at config
-    const postSlideFunctionArgsRaw = documentProperties.getProperty('POST_SLIDE_FUNCTION_ARGS');
+    const postSlideFunctionArgsRaw =
+        documentProperties.getProperty('POST_SLIDE_FUNCTION_ARGS');
     let postSlideFunctionArgs = {};
     if (postSlideFunctionArgsRaw && postSlideFunctionArgsRaw.length > 0) {
       postSlideFunctionArgs = JSON.parse(postSlideFunctionArgsRaw);
@@ -365,13 +369,22 @@ function parseFieldsAndCreateCollectionSlide(
   }
 }
 
+/**
+ * Adds a set of slides by id based on a provided external deck id.
+ * @param {!GoogleAppsScript.Slides.Presentation} deck - The slide deck to add
+ *     the slide to.
+ * @param {!GoogleAppsScript.Slides.Presentation} insightDeck - The slide deck
+ *     to add the slides from.
+ * @param {!Array<string>} row Array of strings with information from the
+ *     spreadsheet
+ */
 function addInsightSlides(deck, insightDeck, row) {
   // Add insight slides
   const insightSlidesColumn =
       documentProperties.getProperty('INSIGHT_SLIDE_ID_COLUMN');
   if (insightSlidesColumn && insightSlidesColumn.length > 0) {
     const insights =
-      row[insightSlidesColumn - 1].split(',').map((item) => item.trim());
+        row[insightSlidesColumn - 1].split(',').map((item) => item.trim());
     if (insights.length > 0) {
       appendInsightSlides(deck, insightDeck, insights);
     }

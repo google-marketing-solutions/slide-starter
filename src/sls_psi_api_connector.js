@@ -15,6 +15,9 @@
  * limitations under the License.
  */
 
+/* exported PsiResult */
+/* exported runPSITests */
+
 /**
  * @typedef {{
 *            error: {message: string}} |
@@ -36,9 +39,11 @@ const RESULTS_TAB = 'Performance Results';
 */
 function getPsiApiKey() {
   const documentProperties = PropertiesService.getDocumentProperties();
-  const key = /** @type {string} */ documentProperties.getProperty('PSI_API_KEY');
+  const key =
+  /** @type {string} */ (documentProperties.getProperty('PSI_API_KEY'));
   if (!key.trim()) {
-    SpreadsheetApp.getUi().alert('Please enter your PSI API Key in Configuration');
+    SpreadsheetApp.getUi().alert(
+        'Please enter your PSI API Key in Configuration');
     throw new Error('The PSI API key must be set to use this tool.');
   }
   return key;
@@ -53,7 +58,7 @@ function runPSITests() {
   const today = new Date().toISOString().slice(0, 10);
   const responseMap = createResultsMap();
   const sheet = SpreadsheetApp.getActive().getSheetByName(RESULTS_TAB);
-  sheet.deleteRows(2, sheet.getLastRow()-1);
+  sheet.deleteRows(2, sheet.getLastRow() - 1);
 
   // There should be one response for each row of urlSettings.
   for (let i = 0; i < responses.length; i++) {
@@ -61,16 +66,14 @@ function runPSITests() {
     const label = urlSettings[i][1]; // B
     const device = urlSettings[i][2]; // C
 
-    const content = /** @type {!PsiResult} */ (
-      JSON.parse(responses[i].getContentText())
-    );
+    const content =
+    /** @type {!PsiResult} */ (JSON.parse(responses[i].getContentText()));
     if (content.error) {
       sheet.appendRow([url, label, device]);
-      const note =
-       `${content.error.message}\n\n` +
-       'If this error persists, investigate the cause by running the ' +
-       'URL manually via ' +
-       'https://developers.google.com/speed/pagespeed/insights/';
+      const note = `${content.error.message}\n\n` +
+         'If this error persists, investigate the cause by running the ' +
+         'URL manually via ' +
+         'https://developers.google.com/speed/pagespeed/insights/';
       addNote(note, '#fdf6f6'); // light red background
     } else {
       const results = parseResults(content, responseMap);
@@ -81,8 +84,12 @@ function runPSITests() {
         cruxDataType = 'ORIGIN';
       }
       // Only used for Katalyst
-      const subtitleSummary = device.toLowerCase() + ' - ' + cruxDataType.toLowerCase();
-      const resultsData = [url, label, device, today, cruxDataType, ...results.data, subtitleSummary];
+      const subtitleSummary =
+         device.toLowerCase() + ' - ' + cruxDataType.toLowerCase();
+      const resultsData = [
+        url, label, device, today, cruxDataType, ...results.data,
+        subtitleSummary,
+      ];
       sheet.appendRow(resultsData);
     }
   }
@@ -101,9 +108,8 @@ function getURLSettings() {
   const lastColumn = sheet.getLastColumn();
   const lastRow = sheet.getLastRow() - 1;
   const range = sheet.getRange(2, 1, lastRow, lastColumn);
-  const settings = /** @type {!Array<!Array<(string | number)>>} */ (
-    range.getValues()
-  );
+  const settings =
+  /** @type {!Array<!Array<(string | number)>>} */ (range.getValues());
   return settings;
 }
 
@@ -121,11 +127,14 @@ function getURLSettings() {
 */
 function submitTests(settings) {
   const key = getPsiApiKey();
-  const categories = '&category=BEST_PRACTICES' + '&category=PERFORMANCE';
-  const serverURLs = settings.map(([url, unused, device]) => ({
-    url: `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?${categories}&strategy=${device}&url=${url}&key=${key}`,
-    muteHttpExceptions: true,
-  }));
+  const categories = '&category=BEST_PRACTICES' +
+     '&category=PERFORMANCE';
+  const serverURLs = settings.map(
+      ([url, unused, device]) => ({
+        url: `https://www.googleapis.com/pagespeedonline/v5/runPagespeed?${
+          categories}&strategy=${device}&url=${url}&key=${key}`,
+        muteHttpExceptions: true,
+      }));
   const responses = UrlFetchApp.fetchAll(serverURLs);
   return responses;
 }
@@ -138,6 +147,8 @@ function submitTests(settings) {
 *
 * @param {!PsiResult} content The
 *     lighthouseResult object returned from PSI to parse.
+* @param {!Map<string, string>} responseMap Map of the required response to
+*     parse
 * @return {{data: !Array<number | string>, crux_data: boolean, origin_fallback:
 *     boolean}} Post-processed data as an array and flags for how the CrUX data
 *     was reported.
@@ -150,7 +161,8 @@ function parseResults(content, responseMap) {
   };
   const {lighthouseResult, loadingExperience} = content;
   const version = lighthouseResult['lighthouseVersion'];
-  const screenshot = lighthouseResult['audits']['final-screenshot']['details']['data'];
+  const screenshot =
+     lighthouseResult['audits']['final-screenshot']['details']['data'];
   const categories = [];
   responseMap.get('categories').forEach((category) => {
     const score = lighthouseResult['categories'][category]['score'] * 100;
@@ -191,7 +203,10 @@ function parseResults(content, responseMap) {
       allResults.origin_fallback = true;
     }
   }
-  allResults.data = [screenshot, ...crux, ...categories, ...metrics, failedAuditNames.toString(), version];
+  allResults.data = [
+    screenshot, ...crux, ...categories, ...metrics, failedAuditNames.toString(),
+    version,
+  ];
   return allResults;
 }
 
@@ -215,7 +230,7 @@ function addNote(note, formatColor = null) {
 // which is why they are named as they are. The order they are defined here
 // is also the order they are inserted into the sheet per parseResults.
 *
-* @return {!Map<string, !Map<string, number>>} The budget values in an object.
+* @return {!Map<string, string>} The budget values in an object.
 */
 function createResultsMap() {
   const categories = ['performance'];

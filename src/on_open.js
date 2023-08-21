@@ -15,6 +15,8 @@
  * limitations under the License.
  */
 
+/* exported onOpen */
+
 /**
  * A special function that runs when the spreadsheet is open, used to add a
  * custom menu to the spreadsheet.
