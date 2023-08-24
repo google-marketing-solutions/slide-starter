@@ -213,7 +213,7 @@ function parseResults(content, responseMap) {
     version,
   ];
 
-  // Added CO2eq measurement integrations behind a flag for backwards compatibility
+  // CO2eq measurement integrations behind a flag for backwards compatibility
   const documentProperties = PropertiesService.getDocumentProperties();
   const shouldIncludeCo2 = documentProperties.getProperty('INCLUDE_CO2EQ');
   if (shouldIncludeCo2) {
