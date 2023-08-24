@@ -159,20 +159,24 @@ function parseResults(content, responseMap) {
     crux_data: false,
     origin_fallback: false,
   };
+
   const {lighthouseResult, loadingExperience} = content;
   const version = lighthouseResult['lighthouseVersion'];
   const screenshot =
      lighthouseResult['audits']['final-screenshot']['details']['data'];
+
   const categories = [];
   responseMap.get('categories').forEach((category) => {
     const score = lighthouseResult['categories'][category]['score'] * 100;
     categories.push(score);
   });
+
   const metrics = [];
   responseMap.get('metrics').forEach((metric) => {
     const value = lighthouseResult['audits'][metric]['numericValue'];
     metrics.push(value);
   });
+
   const auditKeys = Object.keys(lighthouseResult['audits']);
   const failedAuditNames = auditKeys.filter((auditName) => {
     const score = lighthouseResult['audits'][auditName].score;
@@ -203,10 +207,23 @@ function parseResults(content, responseMap) {
       allResults.origin_fallback = true;
     }
   }
+
   allResults.data = [
     screenshot, ...crux, ...categories, ...metrics, failedAuditNames.toString(),
     version,
   ];
+
+  // Added CO2eq measurement integrations behind a flag for backwards compatibility
+  const documentProperties = PropertiesService.getDocumentProperties();
+  const shouldIncludeCo2 = documentProperties.getProperty('INCLUDE_CO2EQ');
+  if (shouldIncludeCo2) {
+    const totalByteWeight =
+      lighthouseResult['audits']['total-byte-weight']['numericValue'];
+    const url = lighthouseResult['finalUrl'];
+    const co2eq = getCo2eqPerByte(totalByteWeight, url);
+    allResults.data.push(co2eq);
+  }
+
   return allResults;
 }
 
