@@ -1,11 +1,66 @@
+/* exported appendInsightDeck */
+/* exported applyCustomStyle */
+/* exported createPerfSlides */
+/* exported onOpen */
+
 /**
- * @fileoverview Web implementation.
+ * @license
+ * Copyright 2023 Google LLC
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
-/* exported applyCustomStyle */
-/* exported createStarterSlides */
-/* exported onOpen */
-/* exported parseFieldsAndCreateSlide */
+/**
+ * Google AppScript File
+ * @fileoverview Performance specific functions used in audit generation.
+ * - onOpen
+ *   Special function that runs when spreadsheet is open, used to load settings
+ *   and create the Katalyst menu.
+ *
+ * - createPerfSlides
+ *   Main function that fetches PageSpeed Insights metrics & creates audit deck.
+ *
+ * - appendInsightDeck
+ *   Finds and attaches a deck of insights for a given criteria.
+ *
+ * - retrieveImage
+ *   Finds an image from the "Images" parent folder.
+ *
+ * - applyCustomStyle
+ *   Updates dynamic CWV title slide & applies formatting updates.
+ *
+ * - buildBackgroundCellColorTableStyleSlidesRequest
+ *   Collects SlidesAPI requests for formatting updates.
+ *
+ * - colorForCWV
+ *   Gets a color based on a CWV score.
+ *
+ * - colorCWVTable
+ *   Generates SlidesAPI requests to color the CWV table based on metrics.
+ *
+ * - setHyperlinksInCWVTable
+ *   Converts URL plain text to hyperlins in the CWV table.
+ *
+ * - truncateUrl
+ *   Prevents long URLs running over one line.
+ *
+ * - replaceCWVSlideTitle
+ *   Determines and sets the dynamic title of the CWV slide giving an overview
+ *   of how all the URLs performed.
+ *
+ * - getUrlInsights
+ *   Creates insights used to determine the dynamic title of the CWV slide.
+ */
 
 /**
  * A special function that runs when the spreadsheet is open, used to add a
@@ -17,33 +72,53 @@ function onOpen() {
     const spreadsheet = SpreadsheetApp.getActive();
     const menuItems = [
       {
-        name: 'Generate starter slide deck',
-        functionName: 'createStarterSlides',
-      },
-      {
-        name: 'Load configuration',
-        functionName: 'loadConfiguration',
-      },
-      {
-        name: 'Filter criteria only',
-        functionName: 'filterAndSortData',
+        name: 'Generate audit deck',
+        functionName: 'createPerfSlides',
       },
     ];
-    spreadsheet.addMenu('Performance Starter', menuItems);
-    sheetUI();
+    spreadsheet.addMenu('Katalyst', menuItems);
   } catch (error) {
     throw new Error('onOpen failed: ' + error.toString());
   }
 }
 
 /**
- * Loads configuration, fetches metrics for URLs, and creates slide deck.
+ * Loads configuration, fetches PSI metrics for URLs, and creates slide deck.
  */
-function createStarterSlides() {
+function createPerfSlides() {
   loadConfiguration();
   cloneSitesSheet();
   runBatchFromQueue();
-  createDeckFromDatasources();
+  createDeckFromDatasource();
+}
+
+/**
+ * Opens Presentation with the newDeckId and appends a deck of insight slides
+ * based on the first item of the row. Will add client & best practice images.
+ *
+ * @param {!string} newDeckId Id of the new slide deck that has
+ * been generated.
+ * @param {array} row An array of text from a spreadsheet row containing
+ * [insightDeckName, pages] where insightDeckName is the title of the criteria &
+ * insight deck filename, and pages are the failing audited pages which will be
+ * injected into slides.
+ */
+function appendInsightDeck(newDeckId, row) {
+  const [insightDeckName, pages] = row;
+  const currentDeck = SlidesApp.openById(newDeckId);
+  const insightFolderID = documentProperties.getProperty('INSIGHTS_FOLDER_ID');
+  const insightFolder = DriveApp.getFolderById(insightFolderID);
+  const fileIterator = insightFolder.getFilesByName(insightDeckName);
+  // There should only be one file in each folder for now
+  while (fileIterator.hasNext()) {
+    const insightDeckId = fileIterator.next().getId();
+    const insightDeck = SlidesApp.openById(insightDeckId).getSlides();
+    for (const slide of insightDeck) {
+      currentDeck.appendSlide(slide, SlidesApp.SlideLinkingMode.NOT_LINKED);
+    }
+  }
+  const stringsToReplace = [['{{pages}}', pages]];
+  replaceText(currentDeck, stringsToReplace);
 }
 
 /**
@@ -52,9 +127,10 @@ function createStarterSlides() {
  * for CrUX CWV data.
  */
 const CWV = {
-  LCP: [2500, 4000],
+  LCP: [2.5, 4],
   FID: [100, 300],
   CLS: [0.1, 0.25],
+  INP: [200, 500],
 };
 
 /**
@@ -69,70 +145,13 @@ const COLORS = {
 };
 
 /**
- * Parses the fields contained on the incoming row from the spreadsheet into
- * some specific information fields, and then creates the slide using GAS.
+ * Applies any extra operations to the deck based on the specifics of the audit.
  *
- * @param {!Presentation} deck Id of the generated deck that will contain the
- *     recos
- * @param {!Presentation} insightDeck Reference to the generated deck
- * @param {!Layout} recommendationSlideLayout The template layout
- * @param {!Array<string>} row Array of strings with information from the
- *     spreadsheet
- */
-function parseFieldsAndCreateSlide(
-    deck, insightDeck, recommendationSlideLayout, row) {
-  const criteriaNameIndex = documentProperties.getProperty('TITLE_COLUMN') - 1;
-  const criteriaAppliesIndex =
-      documentProperties.getProperty('SUBTITLE_COLUMN') - 1;
-  const criteriaProblemStatementIndex =
-      documentProperties
-          .getProperty('WEB_RECOMMENDATIONS_PROBLEM_STATEMENT_ROW') - 1;
-  const criteriaSolutionStatementIndex =
-      documentProperties
-          .getProperty('WEB_RECOMMENDATIONS_SOLUTION_STATEMENT_ROW') - 1;
-  const criteriaInsightSlidesIndex =
-      documentProperties.getProperty('INSIGHT_SLIDE_ID_COLUMN') - 1;
-
-  const criteria = row[criteriaNameIndex];
-  const applicable = row[criteriaAppliesIndex];
-  let potentialSubtitle = '';
-  if (applicable) {
-    potentialSubtitle = `Applies for: ${applicable}`;
-  }
-  const description = row[criteriaProblemStatementIndex];
-  const learnMore = row[criteriaSolutionStatementIndex];
-  const insights = row[criteriaInsightSlidesIndex].split(',');
-
-  createRecommendationSlideGAS(
-      deck, recommendationSlideLayout, criteria, potentialSubtitle, description,
-      learnMore, insights);
-  if (insights.length > 0) {
-    appendInsightSlides(deck, insightDeck, insights);
-  }
-}
-
-/**
- * Applies any extra operations to the deck based on the specifics of the audit
- *
- * @param {string} newDeckId Id of the generated deck that will contain the
- *     recos
+ * @param {!string} newDeckId Id of the new slide deck that has
+ * been generated.
  */
 function applyCustomStyle(newDeckId) {
-  const deck = SlidesApp.openById(newDeckId);
-  const insightDeck =
-      SlidesApp.openById(documentProperties.getProperty('INSIGHTS_DECK_ID'));
-  const appendixDeckId = documentProperties.getProperty('APPENDIX_DECK_ID');
-  if (appendixDeckId) {
-    const appendixSlides = SlidesApp.openById(appendixDeckId).getSlides();
-    const thisDeck = SlidesApp.openById(newDeckId);
-    for (const slide of appendixSlides) {
-      thisDeck.appendSlide(slide, SlidesApp.SlideLinkingMode.NOT_LINKED);
-    }
-  }
-  const endSlideId = documentProperties.getProperty('END_SLIDE_ID');
-  const endSlide = insightDeck.getSlideById(endSlideId.trim());
-  deck.appendSlide(endSlide, SlidesApp.SlideLinkingMode.NOT_LINKED);
-
+  replaceCWVSlideTitle(newDeckId);
   documentProperties.setProperty('SLIDES_REQUESTS', JSON.stringify([]));
   colorCWVTable(newDeckId);
   const resource = {
@@ -142,57 +161,15 @@ function applyCustomStyle(newDeckId) {
 }
 
 /**
- * Creates the slides programmatically using the SlidesApp from AppScript:
- * It first creates a new slide with the specified layout, it populates the
- * placeholders with
- *
- * @param {string} deck Id of the generated deck that will contain the recos
- * @param {!Layout} recommendationSlideLayout The template layout
- * @param {string} criteria The name of the criteria used as title
- * @param {string} applicable A list of pages where this criteria is applicable
- * @param {string} description The description of the failing criteria
- * @param {string} learnMore The URL of the page with extended information
- */
-function createRecommendationSlideGAS(
-    deck, recommendationSlideLayout, criteria, applicable, description,
-    learnMore) {
-  SpreadsheetApp.getActiveSpreadsheet().toast(
-      'Creating slide for criteria: ' + criteria);
-  const slide = deck.appendSlide(recommendationSlideLayout);
-
-  const titlePlaceholder =
-      slide.getPlaceholder(SlidesApp.PlaceholderType.TITLE);
-  const subtitlePlaceholder =
-      slide.getPlaceholder(SlidesApp.PlaceholderType.SUBTITLE);
-  const bodyPlaceholder = slide.getPlaceholder(SlidesApp.PlaceholderType.BODY);
-
-  const titleRange = titlePlaceholder.asShape().getText();
-  titleRange.setText(criteria);
-
-  const subtitleRange = subtitlePlaceholder.asShape().getText();
-  subtitleRange.setText(applicable);
-
-  const bodyRange = bodyPlaceholder.asShape().getText();
-  bodyRange.setText(description);
-
-  const learnMoreShape = retrieveShape(slide, 'learn_more');
-  slide
-      .insertTextBox(
-          learnMore, learnMoreShape.getLeft(), learnMoreShape.getTop(),
-          learnMoreShape.getWidth(), learnMoreShape.getHeight())
-      .getText().getTextStyle().setLinkUrl(learnMore);
-}
-
-/**
  * Builds a SlidesAPI request to handle the table formatting properties that
  * are not accessible via the SlidesAPI service, such as column width.
  * These requests are retrieved and stored from the document properties after
  * being flattened as JSON.
  *
- * @param {string} tableId String that identifies the table to modify
- * @param {Number} rowIndex Number that identifies the row to modify
- * @param {Number} columnIndex Number that identifies the column to modify
- * @param {Array} color Array of RGB values for the table cell
+ * @param {string} tableId String that identifies the table to modify.
+ * @param {Number} rowIndex Number that identifies the row to modify.
+ * @param {Number} columnIndex Number that identifies the column to modify.
+ * @param {Array} color Array of RGB values for the table cell.
  */
 function buildBackgroundCellColorTableStyleSlidesRequest(
     tableId, rowIndex, columnIndex, color) {
@@ -231,9 +208,9 @@ function buildBackgroundCellColorTableStyleSlidesRequest(
  * Determines a color based on if a value is a Good, Needs Improvement or Poor
  * range for a given metric.
  *
- * @param {Array} range Array with a low and high threshold for a CWV metric
- * @param {Number} value Number indicating the metric score
- * @return {Array} Array of RBG values in decimal form
+ * @param {Array} range Array with a low and high threshold for a CWV metric.
+ * @param {Number} value Number indicating the metric score.
+ * @return {Array} Array of RBG values in decimal form.
  */
 function colorForCWV([lowThreshold, highThreshold], value) {
   if (!value.trim()) {
@@ -248,9 +225,10 @@ function colorForCWV([lowThreshold, highThreshold], value) {
 }
 
 /**
- * Applies conditional coloring table to the CWV parameter table
+ * Applies conditional coloring table to the CWV parameter table.
  *
- * @param {string} deckId
+ * @param {!string} deckId Id of the new slide deck that contains the table to
+ * be styled.
  */
 function colorCWVTable(deckId) {
   const documentProperties = PropertiesService.getDocumentProperties();
@@ -261,6 +239,7 @@ function colorCWVTable(deckId) {
   const lcpColumn = cwvTable.getColumn(2);
   const fidColumn = cwvTable.getColumn(3);
   const clsColumn = cwvTable.getColumn(4);
+  const inpColumn = cwvTable.getColumn(5);
 
   for (let i = 1; i <= 3; i++) {
     const cell = lcpColumn.getCell(i);
@@ -282,4 +261,125 @@ function colorCWVTable(deckId) {
     buildBackgroundCellColorTableStyleSlidesRequest(
         cwvTable.getObjectId(), i, 4, color);
   }
+
+  for (let i = 1; i <= 3; i++) {
+    const cell = inpColumn.getCell(i);
+    const color = colorForCWV(CWV.INP, cell.getText().asString());
+    buildBackgroundCellColorTableStyleSlidesRequest(
+        cwvTable.getObjectId(), i, 5, color);
+  }
+
+  setHyperlinksInCWVTable(cwvTable);
+}
+
+/**
+ * Sets hyperlinks for URLs in the CWV table and truncates visible URL if
+ * necessary.
+ *
+ * @param {object} tableRef Table class where first column are the CWV URLs.
+ */
+function setHyperlinksInCWVTable(tableRef) {
+  const urlColumn = tableRef.getColumn(0);
+  for (let i = 1; i <= 3; i++) {
+    const cell = urlColumn.getCell(i);
+    const cellTextRange = cell.getText();
+    const fullUrl = cellTextRange.asString().replace(/(\r\n|\n|\r)/gm, '');
+    if (fullUrl) {
+      const visibleUrl = truncateUrl(fullUrl);
+      cellTextRange.setText(visibleUrl);
+      cellTextRange.getTextStyle().setLinkUrl(fullUrl);
+    }
+  }
+}
+
+/**
+ * Truncates a long url to be less than a max length if necessary, ending in
+ * ellipsis.
+ *
+ * @param {string} urlString A potentially long URL to truncate.
+ * @return {string} The final string to display.
+ */
+function truncateUrl(urlString) {
+  const maxLineLength = 64;
+  const visibleText =
+    urlString.length < maxLineLength ? urlString :
+    `${urlString.slice(0, maxLineLength)}...`;
+  return visibleText;
+}
+
+/**
+ * Determines & sets the dynamic title of the CWV table slide.
+ *
+ * @param {!string} newDeckId Id of the new slide deck that has
+ * been generated.
+ */
+function replaceCWVSlideTitle(newDeckId) {
+  const presentation = SlidesApp.openById(newDeckId);
+  const sheet = SpreadsheetApp.getActive().getSheetByName(
+      documentProperties.getProperty('DICTIONARY_SHEET_NAME'));
+  const customStrings = sheet.getDataRange().offset(1, 0).getValues();
+  let result = 'Current Core Web Vital status';
+  const urlInsights = getUrlInsights(customStrings);
+  const hasBadSpeed = urlInsights.lcp > 0;
+  const hasBadInteractivity = urlInsights.fid > 0 || urlInsights.inp > 0;
+  const hasBadStability = urlInsights.cls > 0;
+  const perfectScore = !hasBadSpeed && !hasBadInteractivity && !hasBadStability;
+  const worstScore = hasBadSpeed && hasBadInteractivity && hasBadStability;
+  if (perfectScore) {
+    result = 'Speed, interactivity, and stability metrics are good but could be optimized further';
+  } else if (worstScore) {
+    result = 'Speed, interactivity, and stability metrics need improvements';
+  } else {
+    let prefixStr = '';
+    if (hasBadSpeed) {
+      prefixStr = 'Speed';
+    }
+    if (hasBadInteractivity) {
+      prefixStr += prefixStr.length ? ' and interactivity' : 'Interactivity';
+    }
+    if (hasBadStability) {
+      prefixStr += prefixStr.length ? ' and stability' : 'Stability';
+    }
+    result = `${prefixStr} metrics need improvements`;
+  }
+  replaceText(presentation, [['{{current_status_title}}', result]]);
+}
+
+/**
+ * Gets url insights for determining the dynamic title of the CWV table slide.
+ *
+ * @param {array} customStrings Nested array of custom strings to be replaced in
+ * the final Presentation containing [searchString, replaceString] where
+ * searchString is the metric name formatted as {{metric}} (and the metric is 3
+ * letters long) and replaceString is the metric score.
+ * @return {object} Bad scores object used to determine the dynamic title of the
+ * CWV slide.
+ */
+function getUrlInsights(customStrings) {
+  const badScores = {
+    lcp: 0,
+    cls: 0,
+    fid: 0,
+    inp: 0,
+  };
+  for (const row of customStrings) {
+    if (!row[0]) break;
+    const [searchString, replaceString] = row;
+    const metric = searchString?.slice(2, 5);
+    if (badScores[metric] !== undefined) {
+      if (metric === 'lcp' && replaceString) {
+        badScores[metric] += replaceString >= CWV.LCP[0];
+      }
+      if (metric === 'cls' && replaceString) {
+        badScores[metric] += replaceString >= CWV.CLS[0];
+      }
+      if (metric === 'fid' && replaceString) {
+        badScores[metric] += replaceString >= CWV.FID[0];
+      }
+      if (metric === 'inp' && replaceString) {
+        badScores[metric] += replaceString >= CWV.INP[0];
+      }
+    }
+  }
+  return badScores;
 }
