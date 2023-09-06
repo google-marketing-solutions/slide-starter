@@ -13,10 +13,14 @@
       #id {
         color: red;
       }
+      .header {
+        font-weight: bold;
+      }
     </style>
   </head>
   <body>
-    <p>Upload for: <?= criteriaName ?></p>
+    <p class="header">Upload for: <?= criteriaName ?></p>
+    <p class="header">File name: <?= fileName ?></p>
     <p>
       An Images folder will be created automatically if it does not exist
       already in the Drive location where this Sheet has been saved.
@@ -29,11 +33,11 @@
       <input
         type="Button"
         value="Upload"
-        onclick="uploadthis(this.parentNode)"
+        onclick="handleUpload(this.parentNode)"
       />
     </form>
     <script>
-      function uploadthis(frmData) {
+      function handleUpload(frmData) {
         const file = frmData.fileToUpload.files[0];
         const reader = new FileReader();
 
