@@ -71,15 +71,18 @@ function createDeckFromDatasource() {
   const documentProperties = PropertiesService.getDocumentProperties();
   const spreadsheet = SpreadsheetApp.getActive().getSheetByName(
       documentProperties.getProperty('DATA_SOURCE_SHEET'));
-  const recommendations = spreadsheet.getFilter().getRange().getValues();
+  const recommendationsRange = spreadsheet.getFilter().getRange();
+  const recommendationsValues = recommendationsRange.getValues();
+
   // Skip the header row after filtering recommendations sheet
-  for (let i = 1; i < recommendations.length; i++) {
+  for (let i = 1; i < recommendationsValues.length; i++) {
     // Passing criteria will be hidden by the filter
     if (spreadsheet.isRowHiddenByFilter(i + 1)) {
       continue;
     }
-    const row = recommendations[i];
-    appendInsightDeck(newDeckId, row);
+    const row = recommendationsValues[i];
+    // i+1 because range includes header
+    appendInsightDeck(newDeckId, row, i+1, recommendationsRange);
   }
   customDataInjection(newDeckId);
   addAppendixDeck(newDeckId);

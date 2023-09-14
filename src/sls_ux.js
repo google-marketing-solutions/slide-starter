@@ -67,16 +67,19 @@ function onOpen() {
  * Opens Presentation with the newDeckId and appends a deck of insight slides
  * based on the first item of the row. Will add client & best practice images.
  *
- * @param {!string} newDeckId Id of the new slide deck that has
+ * @param {!String} newDeckId Id of the new slide deck that has
  * been generated.
- * @param {array} row An array of text from a spreadsheet row containing
+ * @param {Array} row An array of text from a spreadsheet row containing
  * [insightDeckName, unused, clientImageName, bestPracticeImageName] where
  * insightDeckName is the title of the criteria & insight deck filename, unused
  * is necessary in the sheet but not used in this function, and clientImageName
  * & bestPracticeImageName are filenames to replace the client-mockup and
  * best-practice shapes in the insight slides.
+ * @param {Number} index Integer representing the row number of the
+ * recommendation in the catalog sheet.
+ * @param {Range} rangeRef Reference to the range of recommendations.
  */
-function appendInsightDeck(newDeckId, row) {
+function appendInsightDeck(newDeckId, row, index, rangeRef) {
   // Title of the criteria, column A, is the name of the deck to search for
   // File name for the client image, column B, is clientImageName
   // eslint-disable-next-line no-unused-vars
@@ -90,15 +93,17 @@ function appendInsightDeck(newDeckId, row) {
     const insightDeckId = fileIterator.next().getId();
     const insightDeck = SlidesApp.openById(insightDeckId).getSlides();
     for (const slide of insightDeck) {
-      const newSlide = currentDeck.appendSlide(slide, SlidesApp.SlideLinkingMode.NOT_LINKED);
+      const newSlide = currentDeck.appendSlide(
+          slide,
+          SlidesApp.SlideLinkingMode.NOT_LINKED,
+      );
+      const imagesFolder = getImagesFolder();
       try {
-        const folder = getImagesFolder();
-        const clientImageSrc = retrieveImage(folder, clientImageName);
+        // Cell in catalog sheet with the client-mockup file name in column C
+        const cell = rangeRef.getCell(index, 3);
+        const clientImageSrc = retrieveImage(
+            imagesFolder, clientImageName, cell);
         const clientShape = retrieveShape(newSlide, 'client-mockup', false);
-        const bestPracticeImageSrc = retrieveImage(folder, bestPracticeImageName);
-        const bestPracticeShape = retrieveShape(newSlide, 'best-practice', false);
-
-        // Insert images and move behind checkmarks & phone border
         const insertedClientImage = newSlide.insertImage(
             clientImageSrc, clientShape.getLeft(), clientShape.getTop(),
             clientShape.getWidth(), clientShape.getHeight());
@@ -106,15 +111,42 @@ function appendInsightDeck(newDeckId, row) {
         for (let i = 0; i < 3; i++) {
           insertedClientImage.bringForward();
         }
+      } catch (e) {
+        console.log(
+            'Potential error uploading client image:',
+            insightDeckName,
+            ', error:',
+            e,
+        );
+      }
+      try {
+        // Cell in catalog sheet with the client-mockup file name in column D
+        const cell = rangeRef.getCell(index, 4);
+        const bestPracticeImageSrc = retrieveImage(
+            imagesFolder,
+            bestPracticeImageName,
+            cell,
+        );
+        const bestPracticeShape = retrieveShape(
+            newSlide,
+            'best-practice',
+            false,
+        );
         const insertedBestPracticeImage = newSlide.insertImage(
-            bestPracticeImageSrc, bestPracticeShape.getLeft(), bestPracticeShape.getTop(),
+            bestPracticeImageSrc,
+            bestPracticeShape.getLeft(), bestPracticeShape.getTop(),
             bestPracticeShape.getWidth(), bestPracticeShape.getHeight());
         insertedBestPracticeImage.sendToBack();
         for (let i = 0; i < 4; i++) {
           insertedBestPracticeImage.bringForward();
         }
       } catch (e) {
-        console.log('error uploading an image:', e);
+        console.log(
+            'Potential error uploading best practice image:',
+            insightDeckName,
+            ', error:',
+            e,
+        );
       }
     }
   }
@@ -136,10 +168,11 @@ function appendInsightDeck(newDeckId, row) {
  * multiple images, the last one is selected.
  *
  * @param {!Folder} folder The folder where images are being stored.
- * @param {string} criteriaId String corresponding to the image name.
+ * @param {String} criteriaId String corresponding to the image name.
+ * @param {Cell} cell Reference to the cell with the name of the image.
  * @return {?*} Image file for the screenshot or a string url for the default
  */
-function retrieveImage(folder, criteriaId) {
+function retrieveImage(folder, criteriaId, cell) {
   const searchQuery = `title contains '${criteriaId}'
       and mimeType contains 'image'`;
   const files = folder.searchFiles(searchQuery);
@@ -147,17 +180,17 @@ function retrieveImage(folder, criteriaId) {
 
   if (files.hasNext()) {
     file = files.next();
+    cell.setBackground('white');
   } else {
     SpreadsheetApp.getActiveSpreadsheet().toast(WARNING_NO_IMAGES + criteriaId);
+    console.log(`Using default image for ${criteriaId}`);
+    cell.setBackground('red');
+    file = documentProperties.getProperty('UX_DEFAULT_IMAGE_MOCKUP');
   }
 
   if (files.hasNext()) {
     SpreadsheetApp.getActiveSpreadsheet().toast(
         WARNING_MULTIPLE_IMAGES + criteriaId);
-  }
-
-  if (file === null) {
-    file = documentProperties.getProperty('UX_DEFAULT_IMAGE_MOCKUP');
   }
 
   return file;
@@ -166,7 +199,7 @@ function retrieveImage(folder, criteriaId) {
 /**
  * Applies any extra operations to the deck based on the specifics of the audit.
  *
- * @param {!string} newDeckId Id of the new slide deck that has
+ * @param {!String} newDeckId Id of the new slide deck that has
  * been generated.
  */
 function applyCustomStyle(newDeckId) {
