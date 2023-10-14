@@ -30,6 +30,7 @@
 /* exported appendInsightSlides */
 /* exported filterAndSortData */
 /* exported colorForCWV */
+/* global documentProperties */
 
 /**
  * Embed a Sheets chart (indicated by the spreadsheetId and sheetChartId) onto
@@ -43,53 +44,46 @@
  * @return {*}
  */
 function replaceSlideShapeWithSheetsChart(
-  presentationId,
-  spreadsheetId,
-  sheetChartId,
-  slidePageId,
-  slideChartShape
-) {
-  const chartHeight = slideChartShape.getInherentHeight();
-  const chartWidth = slideChartShape.getInherentWidth();
-  const chartTransform = slideChartShape.getTransform();
-  const presentationChartId = "chart-test";
-  const requests = [
-    {
-      createSheetsChart: {
-        objectId: presentationChartId,
-        spreadsheetId: spreadsheetId,
-        chartId: sheetChartId,
-        linkingMode: "LINKED",
-        elementProperties: {
-          pageObjectId: slidePageId,
-          size: {
-            width: { magnitude: chartHeight, unit: "PT" },
-            height: { magnitude: chartWidth, unit: "PT" },
-          },
-          transform: {
-            scaleX: chartTransform.getScaleX(),
-            scaleY: chartTransform.getScaleY(),
-            translateX: chartTransform.getTranslateX(),
-            translateY: chartTransform.getTranslateY(),
-            unit: "PT",
-          },
+  presentationId, spreadsheetId, sheetChartId, slidePageId, slideChartShape) {
+const chartHeight = slideChartShape.getInherentHeight();
+const chartWidth = slideChartShape.getInherentWidth();
+const chartTransform = slideChartShape.getTransform();
+const presentationChartId = 'chart-test';
+const requests = [
+  {
+    createSheetsChart: {
+      objectId: presentationChartId,
+      spreadsheetId: spreadsheetId,
+      chartId: sheetChartId,
+      linkingMode: 'LINKED',
+      elementProperties: {
+        pageObjectId: slidePageId,
+        size: {
+          width: {magnitude: chartHeight, unit: 'PT'},
+          height: {magnitude: chartWidth, unit: 'PT'},
+        },
+        transform: {
+          scaleX: chartTransform.getScaleX(),
+          scaleY: chartTransform.getScaleY(),
+          translateX: chartTransform.getTranslateX(),
+          translateY: chartTransform.getTranslateY(),
+          unit: 'PT',
         },
       },
     },
-  ];
+  },
+];
 
-  // Execute the request.
-  try {
-    const batchUpdateResponse = Slides.Presentations.batchUpdate(
-      { requests: requests },
-      presentationId
-    );
-    console.log("Added a linked Sheets chart with ID: %s", presentationChartId);
-    slideChartShape.remove();
-    return batchUpdateResponse;
-  } catch (err) {
-    console.log("Failed with error: %s", err);
-  }
+// Execute the request.
+try {
+  const batchUpdateResponse =
+      Slides.Presentations.batchUpdate({requests: requests}, presentationId);
+  console.log('Added a linked Sheets chart with ID: %s', presentationChartId);
+  slideChartShape.remove();
+  return batchUpdateResponse;
+} catch (err) {
+  console.log('Failed with error: %s', err);
+}
 }
 
 /**
@@ -127,9 +121,8 @@ function retrieveShape(slide, typeString) {
  */
 function getTemplateLayoutId(presentationId, layoutName = null) {
   const layouts = Slides.Presentations.get(presentationId).layouts;
-  const nameToMatch = layoutName
-    ? layoutName
-    : documentProperties.getProperty("LAYOUT_NAME");
+  const nameToMatch =
+      layoutName ? layoutName : documentProperties.getProperty('LAYOUT_NAME');
   for (const layout of layouts) {
     if (layout.layoutProperties.displayName === nameToMatch) {
       return layout.objectId;
@@ -169,17 +162,16 @@ function getTemplateLayout(presentationId, layoutName = null) {
  * @return {string} Id of the copied deck
  */
 function createBaseDeck() {
-  const parentFolder = DriveApp.getFileById(
-    SpreadsheetApp.getActiveSpreadsheet().getId()
-  )
-    .getParents()
-    .next();
-  const templateDeck = DriveApp.getFileById(
-    documentProperties.getProperty("TEMPLATE_DECK_ID")
-  );
+  const parentFolder =
+      DriveApp.getFileById(SpreadsheetApp.getActiveSpreadsheet().getId())
+          .getParents()
+          .next();
+  const templateDeck =
+      DriveApp.getFileById(documentProperties.getProperty('TEMPLATE_DECK_ID'));
   return templateDeck
-    .makeCopy(documentProperties.getProperty("OUTPUT_DECK_NAME"), parentFolder)
-    .getId();
+      .makeCopy(
+          documentProperties.getProperty('OUTPUT_DECK_NAME'), parentFolder)
+      .getId();
 }
 
 /**
@@ -253,15 +245,12 @@ function retrieveImageFromFolder(folder, imageName) {
 
   if (files.hasNext()) {
     SpreadsheetApp.getActiveSpreadsheet().toast(
-      WARNING_MULTIPLE_IMAGES + imageName
-    );
+        WARNING_MULTIPLE_IMAGES + imageName);
   }
 
   if (file === null) {
-    file =
-      PropertiesService.getDocumentProperties().getProperty(
-        "DEFAULT_IMAGE_URL"
-      );
+    file = PropertiesService.getDocumentProperties().getProperty(
+        'DEFAULT_IMAGE_URL');
   }
 
   return file;
@@ -351,8 +340,7 @@ function shouldCreateCollectionSlide() {
   return (
     (titleColumn && titleColumn.length > 0) ||
     (subtitleColumn && subtitleColumn.length > 0) ||
-    (bodyColumn && bodyColumn.length > 0)
-  );
+    (bodyColumn && bodyColumn.length > 0));
 }
 
 /**
@@ -387,12 +375,11 @@ function appendInsightSlides(deck, insightDeck, insights) {
  *     to the active sheet.
  */
 function filterAndSortData(sheet = undefined) {
-  SpreadsheetApp.getActiveSpreadsheet().toast("Filtering and sorting");
+  SpreadsheetApp.getActiveSpreadsheet().toast('Filtering and sorting');
   const documentProperties = PropertiesService.getDocumentProperties();
   if (!sheet) {
     sheet = SpreadsheetApp.getActive().getSheetByName(
-      documentProperties.getProperty("DATA_SOURCE_SHEET")
-    );
+        documentProperties.getProperty('DATA_SOURCE_SHEET'));
   }
 
   const lastRow = sheet.getLastRow();
@@ -404,23 +391,20 @@ function filterAndSortData(sheet = undefined) {
   }
 
   let sortingOrder = false;
-  if (documentProperties.getProperty("SORTING_ORDER")) {
-    sortingOrder = Boolean(documentProperties.getProperty("SORTING_ORDER"));
+  if (documentProperties.getProperty('SORTING_ORDER')) {
+    sortingOrder = Boolean(documentProperties.getProperty('SORTING_ORDER'));
   }
 
   const filter = sheet.getRange(1, 1, lastRow, lastColumn).createFilter();
-  const filterColumn = documentProperties.getProperty("FILTER_COLUMN");
+  const filterColumn = documentProperties.getProperty('FILTER_COLUMN');
   if (filterColumn && filterColumn.length > 0) {
     const failingFilterCriteria =
-      SpreadsheetApp.newFilterCriteria().whenTextContains(
-        documentProperties.getProperty("FILTER_TEXT_VALUE")
-      );
-    filter
-      .sort(documentProperties.getProperty("SORTING_COLUMN"), sortingOrder)
-      .setColumnFilterCriteria(
-        documentProperties.getProperty("FILTER_COLUMN"),
-        failingFilterCriteria
-      );
+        SpreadsheetApp.newFilterCriteria().whenTextContains(
+            documentProperties.getProperty('FILTER_TEXT_VALUE'));
+    filter.sort(documentProperties.getProperty('SORTING_COLUMN'), sortingOrder)
+        .setColumnFilterCriteria(
+            documentProperties.getProperty('FILTER_COLUMN'),
+            failingFilterCriteria);
   }
 }
 
