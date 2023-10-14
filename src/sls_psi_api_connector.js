@@ -72,9 +72,15 @@ function runPSITests() {
     const content =
     /** @type {!PsiResult} */ (JSON.parse(responses[i].getContentText()));
     if (content.error) {
-      const placeholderTextArray = 
+      const placeholderTextArray =
         new Array(sheet.getLastColumn() - 3).fill('N/A');
-      sheet.appendRow([url, label, device, ...placeholderTextArray, subtitleSummary]);
+      sheet.appendRow([
+        url,
+        label,
+        device,
+        ...placeholderTextArray,
+        subtitleSummary,
+      ]);
       const note = `${content.error.message}\n\n` +
          'If this error persists, investigate the cause by running the ' +
          'URL manually via ' +

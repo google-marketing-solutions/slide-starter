@@ -44,46 +44,46 @@
  * @return {*}
  */
 function replaceSlideShapeWithSheetsChart(
-  presentationId, spreadsheetId, sheetChartId, slidePageId, slideChartShape) {
-const chartHeight = slideChartShape.getInherentHeight();
-const chartWidth = slideChartShape.getInherentWidth();
-const chartTransform = slideChartShape.getTransform();
-const presentationChartId = 'chart-test';
-const requests = [
-  {
-    createSheetsChart: {
-      objectId: presentationChartId,
-      spreadsheetId: spreadsheetId,
-      chartId: sheetChartId,
-      linkingMode: 'LINKED',
-      elementProperties: {
-        pageObjectId: slidePageId,
-        size: {
-          width: {magnitude: chartHeight, unit: 'PT'},
-          height: {magnitude: chartWidth, unit: 'PT'},
-        },
-        transform: {
-          scaleX: chartTransform.getScaleX(),
-          scaleY: chartTransform.getScaleY(),
-          translateX: chartTransform.getTranslateX(),
-          translateY: chartTransform.getTranslateY(),
-          unit: 'PT',
+    presentationId, spreadsheetId, sheetChartId, slidePageId, slideChartShape) {
+  const chartHeight = slideChartShape.getInherentHeight();
+  const chartWidth = slideChartShape.getInherentWidth();
+  const chartTransform = slideChartShape.getTransform();
+  const presentationChartId = 'chart-test';
+  const requests = [
+    {
+      createSheetsChart: {
+        objectId: presentationChartId,
+        spreadsheetId: spreadsheetId,
+        chartId: sheetChartId,
+        linkingMode: 'LINKED',
+        elementProperties: {
+          pageObjectId: slidePageId,
+          size: {
+            width: {magnitude: chartHeight, unit: 'PT'},
+            height: {magnitude: chartWidth, unit: 'PT'},
+          },
+          transform: {
+            scaleX: chartTransform.getScaleX(),
+            scaleY: chartTransform.getScaleY(),
+            translateX: chartTransform.getTranslateX(),
+            translateY: chartTransform.getTranslateY(),
+            unit: 'PT',
+          },
         },
       },
     },
-  },
-];
+  ];
 
-// Execute the request.
-try {
-  const batchUpdateResponse =
+  // Execute the request.
+  try {
+    const batchUpdateResponse =
       Slides.Presentations.batchUpdate({requests: requests}, presentationId);
-  console.log('Added a linked Sheets chart with ID: %s', presentationChartId);
-  slideChartShape.remove();
-  return batchUpdateResponse;
-} catch (err) {
-  console.log('Failed with error: %s', err);
-}
+    console.log('Added a linked Sheets chart with ID: %s', presentationChartId);
+    slideChartShape.remove();
+    return batchUpdateResponse;
+  } catch (err) {
+    console.log('Failed with error: %s', err);
+  }
 }
 
 /**
@@ -103,7 +103,7 @@ function retrieveShape(slide, typeString) {
       return shape;
     }
   }
-  throw new Error(ERROR_NO_SHAPE + " " + typeString);
+  throw new Error(ERROR_NO_SHAPE + ' ' + typeString);
 }
 
 /**
@@ -268,7 +268,7 @@ function retrieveImageFromFolder(folder, imageName) {
 function getFunctionByName(functionName) {
   const alphanumericRegex = /^[a-zA-Z0-9]+$/;
   if (!alphanumericRegex.test(functionName)) {
-    throw new Error("Function name not alphanumeric");
+    throw new Error('Function name not alphanumeric');
   }
   return new Function(`return ${functionName};`)();
 }
@@ -281,7 +281,7 @@ function getFunctionByName(functionName) {
  */
 function isValidImageUrl(url) {
   // TODO: Check if it's an image
-  return url.startsWith("http://") || url.startsWith("https://");
+  return url.startsWith('http://') || url.startsWith('https://');
 }
 
 // Katalyst helpers
@@ -297,7 +297,7 @@ function createHeaderSlide(deckId, layout, title) {
   const deck = SlidesApp.openById(deckId);
   const slide = deck.appendSlide(layout);
   const titlePlaceholder = slide.getPlaceholder(
-    SlidesApp.PlaceholderType.TITLE
+      SlidesApp.PlaceholderType.TITLE,
   );
   const titleRange = titlePlaceholder.asShape().getText();
   titleRange.setText(title);
@@ -312,9 +312,9 @@ function createHeaderSlide(deckId, layout, title) {
 function customDataInjection(newDeckId) {
   const presentation = SlidesApp.openById(newDeckId);
 
-  SpreadsheetApp.getActiveSpreadsheet().toast("Autofilling strings");
+  SpreadsheetApp.getActiveSpreadsheet().toast('Autofilling strings');
   const sheet = SpreadsheetApp.getActive().getSheetByName(
-    documentProperties.getProperty("DICTIONARY_SHEET_NAME")
+      documentProperties.getProperty('DICTIONARY_SHEET_NAME'),
   );
 
   const dictionary = sheet.getDataRange().offset(1, 0).getValues();
@@ -334,9 +334,9 @@ function customDataInjection(newDeckId) {
  *     the collection
  */
 function shouldCreateCollectionSlide() {
-  const titleColumn = documentProperties.getProperty("TITLE_COLUMN");
-  const subtitleColumn = documentProperties.getProperty("SUBTITLE_COLUMN");
-  const bodyColumn = documentProperties.getProperty("BODY_COLUMN");
+  const titleColumn = documentProperties.getProperty('TITLE_COLUMN');
+  const subtitleColumn = documentProperties.getProperty('SUBTITLE_COLUMN');
+  const bodyColumn = documentProperties.getProperty('BODY_COLUMN');
   return (
     (titleColumn && titleColumn.length > 0) ||
     (subtitleColumn && subtitleColumn.length > 0) ||
@@ -352,7 +352,7 @@ function shouldCreateCollectionSlide() {
  */
 function appendInsightSlides(deck, insightDeck, insights) {
   for (const insightSlideId of insights) {
-    if (insightSlideId === "") {
+    if (insightSlideId === '') {
       continue;
     }
     const insightSlide = insightDeck.getSlideById(insightSlideId.trim());
