@@ -296,19 +296,25 @@ function parseFieldsAndCreateCollectionSlide(deck, slideLayout, row) {
 
   // Add title
   const titleColumn = documentProperties.getProperty('TITLE_COLUMN');
-  const titleText = row[titleColumn - 1];
-  addTextToPlaceholder(slide, SlidesApp.PlaceholderType.TITLE, titleText, '');
+  if (titleColumn && titleColumn.length > 0) {
+    const titleText = row[titleColumn - 1];
+    addTextToPlaceholder(slide, SlidesApp.PlaceholderType.TITLE, titleText, '');
+  }
 
   // Add subtitle
   const subtitleColumn = documentProperties.getProperty('SUBTITLE_COLUMN');
-  const subtitleText = row[subtitleColumn - 1];
-  addTextToPlaceholder(
-      slide, SlidesApp.PlaceholderType.SUBTITLE, subtitleText, '');
+  if (subtitleColumn && subtitleColumn.length > 0) {
+    const subtitleText = row[subtitleColumn - 1];
+    addTextToPlaceholder(
+        slide, SlidesApp.PlaceholderType.SUBTITLE, subtitleText, '');
+  }
 
   // Add body
   const bodyColumn = documentProperties.getProperty('BODY_COLUMN');
-  const bodyText = row[bodyColumn - 1];
-  addTextToPlaceholder(slide, SlidesApp.PlaceholderType.BODY, bodyText, '');
+  if (bodyColumn && bodyColumn.length > 0) {
+    const bodyText = row[bodyColumn - 1];
+    addTextToPlaceholder(slide, SlidesApp.PlaceholderType.BODY, bodyText, '');
+  }
 
   // Add images
   const imageShapesArray = documentProperties.getProperty('IMAGE_SHAPES')

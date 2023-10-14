@@ -58,18 +58,23 @@ function runPSITests() {
   const today = new Date().toISOString().slice(0, 10);
   const responseMap = createResultsMap();
   const sheet = SpreadsheetApp.getActive().getSheetByName(RESULTS_TAB);
-  sheet.deleteRows(2, sheet.getLastRow() - 1);
+  if (sheet.getLastRow() > 1) {
+    sheet.deleteRows(2, sheet.getLastRow() - 1);
+  }
 
   // There should be one response for each row of urlSettings.
   for (let i = 0; i < responses.length; i++) {
-    const url = urlSettings[i][0]; // A
-    const label = urlSettings[i][1]; // B
-    const device = urlSettings[i][2]; // C
+    const url = urlSettings[i][0];
+    const label = urlSettings[i][1];
+    const device = urlSettings[i][2];
+    let subtitleSummary = 'PSI Error';
 
     const content =
     /** @type {!PsiResult} */ (JSON.parse(responses[i].getContentText()));
     if (content.error) {
-      sheet.appendRow([url, label, device]);
+      const placeholderTextArray = 
+        new Array(sheet.getLastColumn() - 3).fill('N/A');
+      sheet.appendRow([url, label, device, ...placeholderTextArray, subtitleSummary]);
       const note = `${content.error.message}\n\n` +
          'If this error persists, investigate the cause by running the ' +
          'URL manually via ' +
@@ -83,8 +88,7 @@ function runPSITests() {
       } else if (results.origin_fallback) {
         cruxDataType = 'ORIGIN';
       }
-      // Only used for Katalyst
-      const subtitleSummary =
+      subtitleSummary =
          device.toLowerCase() + ' - ' + cruxDataType.toLowerCase();
       const resultsData = [
         url, label, device, today, cruxDataType, ...results.data,
