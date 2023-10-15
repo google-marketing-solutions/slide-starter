@@ -32,6 +32,8 @@
 /* exported colorForCWV */
 /* global documentProperties */
 
+documentProperties = PropertiesService.getDocumentProperties();
+
 /**
  * Embed a Sheets chart (indicated by the spreadsheetId and sheetChartId) onto
  *   a page in the presentation. Setting the linking mode as 'LINKED' allows the

@@ -19,8 +19,6 @@ import { assert } from "chai";
 import "mocha";
 import rewire from "rewire";
 
-const documentProperties = PropertiesService.getDocumentProperties();
-
 globalThis.PropertiesService = {
   getDocumentProperties: () => {
     return {
