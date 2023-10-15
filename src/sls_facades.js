@@ -30,7 +30,6 @@
 /* exported appendInsightSlides */
 /* exported filterAndSortData */
 /* exported colorForCWV */
-/* global documentProperties */
 
 documentProperties = PropertiesService.getDocumentProperties();
 
