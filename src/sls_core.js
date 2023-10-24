@@ -247,10 +247,10 @@ function createSingleSlide(deck, insightDeck, slideLayout) {
     slideBody.setText(body);
   }
 
-  const imageShapesArray = documentProperties.getProperty('IMAGE_SHAPES')
+  const imageShapesArray = (documentProperties.getProperty('IMAGE_SHAPES') || "")
       .split(',')
       .map((item) => item.trim());
-  const imageRangesArray = documentProperties.getProperty('IMAGE_RANGES')
+  const imageRangesArray = (documentProperties.getProperty('IMAGE_RANGES') || "")
       .split(',')
       .map((item) => item.trim());
 
@@ -317,10 +317,10 @@ function parseFieldsAndCreateCollectionSlide(deck, slideLayout, row) {
   }
 
   // Add images
-  const imageShapesArray = documentProperties.getProperty('IMAGE_SHAPES')
+  const imageShapesArray = (documentProperties.getProperty('IMAGE_SHAPES') || "")
       .split(',')
       .map((item) => item.trim());
-  const imageColumnsArray = documentProperties.getProperty('IMAGE_COLUMNS')
+  const imageColumnsArray = (documentProperties.getProperty('IMAGE_COLUMNS') || "")
       .split(',')
       .map((item) => item.trim());
 
@@ -355,10 +355,10 @@ function parseFieldsAndCreateCollectionSlide(deck, slideLayout, row) {
   }
 
   // Add other text fields
-  const textShapesArray = documentProperties.getProperty('TEXT_SHAPES')
+  const textShapesArray = (documentProperties.getProperty('TEXT_SHAPES') || "")
       .split(',')
       .map((item) => item.trim());
-  const textColumnsArray = documentProperties.getProperty('TEXT_COLUMNS')
+  const textColumnsArray = (documentProperties.getProperty('TEXT_COLUMNS') || "")
       .split(',')
       .map((item) => item.trim());
 
