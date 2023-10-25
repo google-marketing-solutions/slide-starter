@@ -31,6 +31,10 @@
 /* exported filterAndSortData */
 /* exported colorForCWV */
 
+/*
+Global redefined here to prevent access errors from the tests.
+This will be addressed with 
+*/
 documentProperties = PropertiesService.getDocumentProperties();
 
 /**
@@ -281,7 +285,7 @@ function getFunctionByName(functionName) {
  * @return {boolean} Whether the URL is a valid image URL.
  */
 function isValidImageUrl(url) {
-  // TODO: Check if it's an image
+  // TODO: Fix issue #39 Check if it's an image
   return url.startsWith('http://') || url.startsWith('https://');
 }
 
