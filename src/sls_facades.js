@@ -34,7 +34,7 @@
 
 /*
 Global redefined here to prevent access errors from the tests.
-This will be addressed with
+This will be addressed with the refactor in issue #40
 */
 documentProperties = PropertiesService.getDocumentProperties();
 
