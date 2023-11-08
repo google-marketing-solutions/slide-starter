@@ -30,10 +30,11 @@
 /* exported appendInsightSlides */
 /* exported filterAndSortData */
 /* exported colorForCWV */
+/* exported getImageValue */
 
 /*
 Global redefined here to prevent access errors from the tests.
-This will be addressed with 
+This will be addressed with
 */
 documentProperties = PropertiesService.getDocumentProperties();
 
@@ -82,7 +83,7 @@ function replaceSlideShapeWithSheetsChart(
   // Execute the request.
   try {
     const batchUpdateResponse =
-      Slides.Presentations.batchUpdate({requests: requests}, presentationId);
+        Slides.Presentations.batchUpdate({requests: requests}, presentationId);
     console.log('Added a linked Sheets chart with ID: %s', presentationChartId);
     slideChartShape.remove();
     return batchUpdateResponse;
@@ -261,6 +262,48 @@ function retrieveImageFromFolder(folder, imageName) {
   return file;
 }
 
+/**
+ * Checks if the provided image value is a base64 encoded image.
+ * @param {string} imageValue - The string value representing the image.
+ * @return {boolean} True if the image is base64 encoded, False otherwise.
+ */
+function isBase64Image(imageValue) {
+  return imageValue.match(/^data:image\/([a-z]+);base64,/i);
+}
+
+/**
+ * Decodes a base64 encoded image string and returns a blob.
+ * @param {string} imageValue - The base64 encoded image string.
+ * @return {Blob} A blob object containing the decoded image data.
+ */
+function decodeBase64Image(imageValue) {
+  const match = imageValue.match(/^data:image\/([a-z]+);base64,/i);
+  const imageType = match[1];
+  const imageBase64 = imageValue.split(',')[1];
+  const decodedImage = Utilities.base64Decode(imageBase64);
+  return Utilities.newBlob(decodedImage, MimeType[imageType.toUpperCase()]);
+}
+
+/**
+ * Retrieves the final image value based on the provided raw value.
+ * @param {string|undefined} rawValue - The raw value representing the image
+ *     source.
+ * @return {string|Blob} The final image URL, blob, or default image URL.
+ */
+function getImageValue(rawValue) {
+  let imageValue =
+      rawValue || documentProperties.getProperty('DEFAULT_IMAGE_URL');
+  if (isBase64Image(imageValue)) {
+    imageValue = decodeBase64Image(imageValue);
+  } else if (!isValidImageUrl(imageValue)) {
+    const folder = DriveApp.getFileById(SpreadsheetApp.getActive().getId())
+        .getParents()
+        .next();
+    imageValue = retrieveImageFromFolder(folder, imageValue);
+  }
+  return imageValue;
+}
+
 // Generic
 
 /**
@@ -344,8 +387,8 @@ function shouldCreateCollectionSlide() {
   const bodyColumn = documentProperties.getProperty('BODY_COLUMN');
   return (
     (titleColumn && titleColumn.length > 0) ||
-    (subtitleColumn && subtitleColumn.length > 0) ||
-    (bodyColumn && bodyColumn.length > 0));
+      (subtitleColumn && subtitleColumn.length > 0) ||
+      (bodyColumn && bodyColumn.length > 0));
 }
 
 /**

@@ -247,12 +247,14 @@ function createSingleSlide(deck, insightDeck, slideLayout) {
     slideBody.setText(body);
   }
 
-  const imageShapesArray = (documentProperties.getProperty('IMAGE_SHAPES') || "")
-      .split(',')
-      .map((item) => item.trim());
-  const imageRangesArray = (documentProperties.getProperty('IMAGE_RANGES') || "")
-      .split(',')
-      .map((item) => item.trim());
+  const imageShapesArray =
+      (documentProperties.getProperty('IMAGE_SHAPES') || '')
+          .split(',')
+          .map((item) => item.trim());
+  const imageRangesArray =
+      (documentProperties.getProperty('IMAGE_RANGES') || '')
+          .split(',')
+          .map((item) => item.trim());
 
   if (imageShapesArray && imageShapesArray.length > 0) {
     for (let i = 0; i < imageShapesArray.length; i++) {
@@ -261,7 +263,8 @@ function createSingleSlide(deck, insightDeck, slideLayout) {
 
       if (shapeId && range) {
         const imageShape = retrieveShape(slide, shapeId);
-        const imageValue = spreadsheet.getRange(range).getValue();
+        const rawImageValue = spreadsheet.getRange(range).getValue();
+        const imageValue = getImageValue(rawImageValue, column);
         slide.insertImage(
             imageValue, imageShape.getLeft(), imageShape.getTop(),
             imageShape.getWidth(), imageShape.getHeight());
@@ -317,36 +320,22 @@ function parseFieldsAndCreateCollectionSlide(deck, slideLayout, row) {
   }
 
   // Add images
-  const imageShapesArray = (documentProperties.getProperty('IMAGE_SHAPES') || "")
-      .split(',')
-      .map((item) => item.trim());
-  const imageColumnsArray = (documentProperties.getProperty('IMAGE_COLUMNS') || "")
-      .split(',')
-      .map((item) => item.trim());
+  const imageShapesArray =
+      (documentProperties.getProperty('IMAGE_SHAPES') || '')
+          .split(',')
+          .map((item) => item.trim());
+  const imageColumnsArray =
+      (documentProperties.getProperty('IMAGE_COLUMNS') || '')
+          .split(',')
+          .map((item) => item.trim());
 
   if (imageShapesArray && imageShapesArray.length > 0) {
     for (let i = 0; i < imageShapesArray.length; i++) {
       const shapeId = imageShapesArray[i];
       const column = imageColumnsArray[i];
-
       if (shapeId && column) {
         const imageShape = retrieveShape(slide, shapeId);
-        let imageValue = row[column - 1];
-        if (!imageValue) {
-          imageValue = documentProperties.getProperty('DEFAULT_IMAGE_URL');
-        } else if (imageValue.split(',')[0] == 'data:image/jpeg;base64') {
-          const imageBase64 = imageValue.split(',')[1];
-          const decodedImage = Utilities.base64Decode(imageBase64);
-          const imageBlob = Utilities.newBlob(decodedImage, MimeType.JPEG);
-          imageValue = imageBlob;
-        } else if (!isValidImageUrl(imageValue)) {
-          const folder =
-              DriveApp.getFileById(SpreadsheetApp.getActive().getId())
-                  .getParents()
-                  .next();
-          const imageName = imageValue;
-          imageValue = retrieveImageFromFolder(folder, imageName);
-        }
+        const imageValue = getImageValue(row[column - 1], column);
         slide.insertImage(
             imageValue, imageShape.getLeft(), imageShape.getTop(),
             imageShape.getWidth(), imageShape.getHeight());
@@ -355,12 +344,13 @@ function parseFieldsAndCreateCollectionSlide(deck, slideLayout, row) {
   }
 
   // Add other text fields
-  const textShapesArray = (documentProperties.getProperty('TEXT_SHAPES') || "")
+  const textShapesArray = (documentProperties.getProperty('TEXT_SHAPES') || '')
       .split(',')
       .map((item) => item.trim());
-  const textColumnsArray = (documentProperties.getProperty('TEXT_COLUMNS') || "")
-      .split(',')
-      .map((item) => item.trim());
+  const textColumnsArray =
+      (documentProperties.getProperty('TEXT_COLUMNS') || '')
+          .split(',')
+          .map((item) => item.trim());
 
   if (textShapesArray && textColumnsArray.length > 0) {
     for (let i = 0; i < textShapesArray.length; i++) {
