@@ -247,14 +247,12 @@ function createSingleSlide(deck, insightDeck, slideLayout) {
     slideBody.setText(body);
   }
 
-  const imageShapesArray =
-      (documentProperties.getProperty('IMAGE_SHAPES') || '')
-          .split(',')
-          .map((item) => item.trim());
-  const imageRangesArray =
-      (documentProperties.getProperty('IMAGE_RANGES') || '')
-          .split(',')
-          .map((item) => item.trim());
+  const imageShapesArray = documentProperties.getProperty('IMAGE_SHAPES')
+      ?.split(',')
+      .map((item) => item.trim());
+  const imageRangesArray = documentProperties.getProperty('IMAGE_RANGES')
+      ?.split(',')
+      .map((item) => item.trim());
 
   if (imageShapesArray && imageShapesArray.length > 0) {
     for (let i = 0; i < imageShapesArray.length; i++) {
@@ -320,14 +318,12 @@ function parseFieldsAndCreateCollectionSlide(deck, slideLayout, row) {
   }
 
   // Add images
-  const imageShapesArray =
-      (documentProperties.getProperty('IMAGE_SHAPES') || '')
-          .split(',')
-          .map((item) => item.trim());
-  const imageColumnsArray =
-      (documentProperties.getProperty('IMAGE_COLUMNS') || '')
-          .split(',')
-          .map((item) => item.trim());
+  const imageShapesArray = documentProperties.getProperty('IMAGE_SHAPES')
+      ?.split(',')
+      .map((item) => item.trim());
+  const imageColumnsArray = documentProperties.getProperty('IMAGE_COLUMNS')
+      ?.split(',')
+      .map((item) => item.trim());
 
   if (imageShapesArray && imageShapesArray.length > 0) {
     for (let i = 0; i < imageShapesArray.length; i++) {
@@ -344,13 +340,12 @@ function parseFieldsAndCreateCollectionSlide(deck, slideLayout, row) {
   }
 
   // Add other text fields
-  const textShapesArray = (documentProperties.getProperty('TEXT_SHAPES') || '')
-      .split(',')
+  const textShapesArray = documentProperties.getProperty('TEXT_SHAPES')
+      ?.split(',')
       .map((item) => item.trim());
-  const textColumnsArray =
-      (documentProperties.getProperty('TEXT_COLUMNS') || '')
-          .split(',')
-          .map((item) => item.trim());
+  const textColumnsArray = (documentProperties.getProperty('TEXT_COLUMNS'))
+      ?.split(',')
+      .map((item) => item.trim());
 
   if (textShapesArray && textColumnsArray.length > 0) {
     for (let i = 0; i < textShapesArray.length; i++) {
