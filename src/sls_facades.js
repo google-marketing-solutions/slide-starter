@@ -392,6 +392,26 @@ function shouldCreateCollectionSlide() {
 }
 
 /**
+ * Checks whether the provided ID is a valid presentation ID.
+ *
+ * @param {string} deckId The ID of the presentation to check.
+ * @returns {boolean} True if the ID is a valid presentation ID, false otherwise.
+ */
+function isPresentationId(deckId) {
+  try {
+    const file = DriveApp.getFileById(deckId);
+    if (file.getMimeType() === "application/vnd.google-apps.presentation") {
+      return true;
+    } else {
+      return false;
+    }
+  } catch (error) {
+    return false;
+  }
+}
+
+
+/**
  * Appends insight slides by reference to the generated deck
  *
  * @param {!Presentation} deck Reference to the generated deck
