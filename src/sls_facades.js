@@ -31,6 +31,7 @@
 /* exported filterAndSortData */
 /* exported colorForCWV */
 /* exported getImageValue */
+/* exported isPresentationId */
 
 /*
 Global redefined here to prevent access errors from the tests.
@@ -54,7 +55,7 @@ function replaceSlideShapeWithSheetsChart(
   const chartHeight = slideChartShape.getInherentHeight();
   const chartWidth = slideChartShape.getInherentWidth();
   const chartTransform = slideChartShape.getTransform();
-  const presentationChartId = new Date().toDateString();  // This ID isn't used
+  const presentationChartId = new Date().toDateString(); // This ID isn't used
   const requests = [
     {
       createSheetsChart: {
@@ -297,8 +298,8 @@ function getImageValue(rawValue) {
     imageValue = decodeBase64Image(imageValue);
   } else if (!isValidImageUrl(imageValue)) {
     const folder = DriveApp.getFileById(SpreadsheetApp.getActive().getId())
-                       .getParents()
-                       .next();
+        .getParents()
+        .next();
     imageValue = retrieveImageFromFolder(folder, imageValue);
   }
   return imageValue;
@@ -386,7 +387,7 @@ function shouldCreateCollectionSlide() {
   const subtitleColumn = documentProperties.getProperty('SUBTITLE_COLUMN');
   const bodyColumn = documentProperties.getProperty('BODY_COLUMN');
   return (
-      (titleColumn && titleColumn.length > 0) ||
+    (titleColumn && titleColumn.length > 0) ||
       (subtitleColumn && subtitleColumn.length > 0) ||
       (bodyColumn && bodyColumn.length > 0));
 }
@@ -395,7 +396,7 @@ function shouldCreateCollectionSlide() {
  * Checks whether the provided ID is a valid presentation ID.
  *
  * @param {string} deckId The ID of the presentation to check.
- * @returns {boolean} True if the ID is a valid presentation ID, false
+ * @return {boolean} True if the ID is a valid presentation ID, false
  *     otherwise.
  */
 function isPresentationId(deckId) {

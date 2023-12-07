@@ -51,7 +51,7 @@
 
 
 // Document properties
-let documentProperties = PropertiesService.getDocumentProperties();
+const documentProperties = PropertiesService.getDocumentProperties();
 
 // --- Katalyst loops
 
@@ -400,7 +400,8 @@ function addInsightSlides(deck, insightDeck, row) {
       let insightSlideIds;
       if (isPresentationId(insights[0])) {
         insightDeckToUse = SlidesApp.openById(insights[0]);
-        insightSlideIds = insightDeckToUse.getSlides().map((item) => item.getObjectId())
+        insightSlideIds = insightDeckToUse.getSlides()
+            .map((item) => item.getObjectId());
       } else {
         insightDeckToUse = insightDeck;
         insightSlideIds = insights;
