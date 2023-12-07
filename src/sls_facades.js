@@ -43,6 +43,10 @@ documentProperties = PropertiesService.getDocumentProperties();
  * Embed a Sheets chart (indicated by the spreadsheetId and sheetChartId) onto
  *   a page in the presentation. Setting the linking mode as 'LINKED' allows the
  *   chart to be refreshed if the Sheets version is updated.
+ * We don't use the objectId when creating the Sheets chart, but the API
+ * requires it, so we use the value of the current full datetime to ensure there
+ * are no duplicates.
+ * 
  * @param {string} presentationId
  * @param {string} spreadsheetId
  * @param {string} sheetChartId
@@ -55,11 +59,11 @@ function replaceSlideShapeWithSheetsChart(
   const chartHeight = slideChartShape.getInherentHeight();
   const chartWidth = slideChartShape.getInherentWidth();
   const chartTransform = slideChartShape.getTransform();
-  const presentationChartId = new Date().toDateString(); // This ID isn't used
+  const requiredForAPIButUnused = new Date().toDateString();
   const requests = [
     {
       createSheetsChart: {
-        objectId: presentationChartId,
+        objectId: requiredForAPIButUnused,
         spreadsheetId: spreadsheetId,
         chartId: sheetChartId,
         linkingMode: 'LINKED',
