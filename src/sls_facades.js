@@ -46,7 +46,7 @@ documentProperties = PropertiesService.getDocumentProperties();
  * We don't use the objectId when creating the Sheets chart, but the API
  * requires it, so we use the value of the current full datetime to ensure there
  * are no duplicates.
- * 
+ *
  * @param {string} presentationId
  * @param {string} spreadsheetId
  * @param {string} sheetChartId
