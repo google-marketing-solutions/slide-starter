@@ -31,6 +31,7 @@
 /* exported filterAndSortData */
 /* exported colorForCWV */
 /* exported getImageValue */
+/* exported isPresentationId */
 
 /*
 Global redefined here to prevent access errors from the tests.
@@ -42,6 +43,10 @@ documentProperties = PropertiesService.getDocumentProperties();
  * Embed a Sheets chart (indicated by the spreadsheetId and sheetChartId) onto
  *   a page in the presentation. Setting the linking mode as 'LINKED' allows the
  *   chart to be refreshed if the Sheets version is updated.
+ * We don't use the objectId when creating the Sheets chart, but the API
+ * requires it, so we use the value of the current full datetime to ensure there
+ * are no duplicates.
+ *
  * @param {string} presentationId
  * @param {string} spreadsheetId
  * @param {string} sheetChartId
@@ -54,11 +59,11 @@ function replaceSlideShapeWithSheetsChart(
   const chartHeight = slideChartShape.getInherentHeight();
   const chartWidth = slideChartShape.getInherentWidth();
   const chartTransform = slideChartShape.getTransform();
-  const presentationChartId = 'chart-test';
+  const requiredForAPIButUnused = new Date().toDateString();
   const requests = [
     {
       createSheetsChart: {
-        objectId: presentationChartId,
+        objectId: requiredForAPIButUnused,
         spreadsheetId: spreadsheetId,
         chartId: sheetChartId,
         linkingMode: 'LINKED',
@@ -239,7 +244,7 @@ function addTextToPlaceholder(slide, placeholderType, text, defaultValue) {
  */
 function retrieveImageFromFolder(folder, imageName) {
   const searchQuery = `title contains '${imageName}'
-  and mimeType contains 'image'`;
+and mimeType contains 'image'`;
   const files = folder.searchFiles(searchQuery);
   let file = null;
 
@@ -390,6 +395,27 @@ function shouldCreateCollectionSlide() {
       (subtitleColumn && subtitleColumn.length > 0) ||
       (bodyColumn && bodyColumn.length > 0));
 }
+
+/**
+ * Checks whether the provided ID is a valid presentation ID.
+ *
+ * @param {string} deckId The ID of the presentation to check.
+ * @return {boolean} True if the ID is a valid presentation ID, false
+ *     otherwise.
+ */
+function isPresentationId(deckId) {
+  try {
+    const file = DriveApp.getFileById(deckId);
+    if (file.getMimeType() === 'application/vnd.google-apps.presentation') {
+      return true;
+    } else {
+      return false;
+    }
+  } catch (error) {
+    return false;
+  }
+}
+
 
 /**
  * Appends insight slides by reference to the generated deck

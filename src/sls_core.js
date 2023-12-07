@@ -91,7 +91,6 @@ function createDeckFromDatasources() {
   }
 
   applyCustomStyle(newDeckId);
-  recordDeckCreated(newDeckId);
 }
 
 /**
@@ -380,6 +379,8 @@ function parseFieldsAndCreateCollectionSlide(deck, slideLayout, row) {
 
 /**
  * Adds a set of slides by id based on a provided external deck id.
+ * It can support both adding slides by ID from a specified deck at
+ * configuration level, or adding ALL slides from a variable insight deck.
  * @param {!GoogleAppsScript.Slides.Presentation} deck - The slide deck to add
  *     the slide to.
  * @param {!GoogleAppsScript.Slides.Presentation} insightDeck - The slide deck
@@ -395,7 +396,17 @@ function addInsightSlides(deck, insightDeck, row) {
     const insights =
         row[insightSlidesColumn - 1].split(',').map((item) => item.trim());
     if (insights.length > 0) {
-      appendInsightSlides(deck, insightDeck, insights);
+      let insightDeckToUse;
+      let insightSlideIds;
+      if (isPresentationId(insights[0])) {
+        insightDeckToUse = SlidesApp.openById(insights[0]);
+        insightSlideIds = insightDeckToUse.getSlides()
+            .map((item) => item.getObjectId());
+      } else {
+        insightDeckToUse = insightDeck;
+        insightSlideIds = insights;
+      }
+      appendInsightSlides(deck, insightDeckToUse, insightSlideIds);
     }
   }
 }
