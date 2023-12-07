@@ -54,7 +54,7 @@ function replaceSlideShapeWithSheetsChart(
   const chartHeight = slideChartShape.getInherentHeight();
   const chartWidth = slideChartShape.getInherentWidth();
   const chartTransform = slideChartShape.getTransform();
-  const presentationChartId = 'chart-test';
+  const presentationChartId = new Date().toDateString();  // This ID isn't used
   const requests = [
     {
       createSheetsChart: {
@@ -239,7 +239,7 @@ function addTextToPlaceholder(slide, placeholderType, text, defaultValue) {
  */
 function retrieveImageFromFolder(folder, imageName) {
   const searchQuery = `title contains '${imageName}'
-  and mimeType contains 'image'`;
+and mimeType contains 'image'`;
   const files = folder.searchFiles(searchQuery);
   let file = null;
 
@@ -297,8 +297,8 @@ function getImageValue(rawValue) {
     imageValue = decodeBase64Image(imageValue);
   } else if (!isValidImageUrl(imageValue)) {
     const folder = DriveApp.getFileById(SpreadsheetApp.getActive().getId())
-        .getParents()
-        .next();
+                       .getParents()
+                       .next();
     imageValue = retrieveImageFromFolder(folder, imageValue);
   }
   return imageValue;
@@ -386,7 +386,7 @@ function shouldCreateCollectionSlide() {
   const subtitleColumn = documentProperties.getProperty('SUBTITLE_COLUMN');
   const bodyColumn = documentProperties.getProperty('BODY_COLUMN');
   return (
-    (titleColumn && titleColumn.length > 0) ||
+      (titleColumn && titleColumn.length > 0) ||
       (subtitleColumn && subtitleColumn.length > 0) ||
       (bodyColumn && bodyColumn.length > 0));
 }
@@ -395,12 +395,13 @@ function shouldCreateCollectionSlide() {
  * Checks whether the provided ID is a valid presentation ID.
  *
  * @param {string} deckId The ID of the presentation to check.
- * @returns {boolean} True if the ID is a valid presentation ID, false otherwise.
+ * @returns {boolean} True if the ID is a valid presentation ID, false
+ *     otherwise.
  */
 function isPresentationId(deckId) {
   try {
     const file = DriveApp.getFileById(deckId);
-    if (file.getMimeType() === "application/vnd.google-apps.presentation") {
+    if (file.getMimeType() === 'application/vnd.google-apps.presentation') {
       return true;
     } else {
       return false;

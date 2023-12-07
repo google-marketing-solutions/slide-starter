@@ -51,7 +51,7 @@
 
 
 // Document properties
-const documentProperties = PropertiesService.getDocumentProperties();
+let documentProperties = PropertiesService.getDocumentProperties();
 
 // --- Katalyst loops
 
@@ -91,7 +91,6 @@ function createDeckFromDatasources() {
   }
 
   applyCustomStyle(newDeckId);
-  recordDeckCreated(newDeckId);
 }
 
 /**
@@ -400,7 +399,7 @@ function addInsightSlides(deck, insightDeck, row) {
       let insightDeckToUse;
       let insightSlideIds;
       if (isPresentationId(insights[0])) {
-        insightDeckToUse = SlidesApp.openById(insightID);
+        insightDeckToUse = SlidesApp.openById(insights[0]);
         insightSlideIds = insightDeckToUse.getSlides().map((item) => item.getObjectId())
       } else {
         insightDeckToUse = insightDeck;
