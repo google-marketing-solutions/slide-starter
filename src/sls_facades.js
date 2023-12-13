@@ -31,6 +31,7 @@
 /* exported filterAndSortData */
 /* exported colorForCWV */
 /* exported getImageValue */
+/* exported isPresentationId */
 
 /*
 Global redefined here to prevent access errors from the tests.
@@ -38,9 +39,151 @@ This will be addressed with
 */
 documentProperties = PropertiesService.getDocumentProperties();
 
+/**
+ * Embed a Sheets chart (indicated by the spreadsheetId and sheetChartId) onto
+ *   a page in the presentation. Setting the linking mode as 'LINKED' allows the
+ *   chart to be refreshed if the Sheets version is updated.
+ * We don't use the objectId when creating the Sheets chart, but the API
+ * requires it, so we use the value of the current full datetime to ensure there
+ * are no duplicates.
+ *
+ * @param {string} presentationId
+ * @param {string} spreadsheetId
+ * @param {string} sheetChartId
+ * @param {string} slidePageId
+ * @param {string} slideChartShape
+ * @return {*}
+ */
+function replaceSlideShapeWithSheetsChart(
+    presentationId, spreadsheetId, sheetChartId, slidePageId, slideChartShape) {
+  const chartHeight = slideChartShape.getInherentHeight();
+  const chartWidth = slideChartShape.getInherentWidth();
+  const chartTransform = slideChartShape.getTransform();
+  const requiredForAPIButUnused = new Date().toDateString();
+  const requests = [
+    {
+      createSheetsChart: {
+        objectId: requiredForAPIButUnused,
+        spreadsheetId: spreadsheetId,
+        chartId: sheetChartId,
+        linkingMode: 'LINKED',
+        elementProperties: {
+          pageObjectId: slidePageId,
+          size: {
+            width: {magnitude: chartHeight, unit: 'PT'},
+            height: {magnitude: chartWidth, unit: 'PT'},
+          },
+          transform: {
+            scaleX: chartTransform.getScaleX(),
+            scaleY: chartTransform.getScaleY(),
+            translateX: chartTransform.getTranslateX(),
+            translateY: chartTransform.getTranslateY(),
+            unit: 'PT',
+          },
+        },
+      },
+    },
+  ];
 
+  // Execute the request.
+  try {
+    const batchUpdateResponse =
+        Slides.Presentations.batchUpdate({requests: requests}, presentationId);
+    console.log('Added a linked Sheets chart with ID: %s', presentationChartId);
+    slideChartShape.remove();
+    return batchUpdateResponse;
+  } catch (err) {
+    console.log('Failed with error: %s', err);
+  }
+}
 
+/**
+ * Returns a Shape object from a slide layout based on a string match. Given API
+ * limitations, it must iterate over all existing shapes in the slide to
+ * retrieve the desired one, then match based on the find function on its
+ * enclosed TextRange.
+ *
+ * @param {!Slide} slide The slide to find the Shape.
+ * @param {string} typeString The string to match in order to find the shape
+ * @return {!Shape} Shape found, or empty string
+ */
+function retrieveShape(slide, typeString) {
+  for (const shape of slide.getLayout().getShapes()) {
+    const shapeText = shape.getText();
+    if (shapeText.find(typeString).length) {
+      return shape;
+    }
+  }
+  throw new Error(ERROR_NO_SHAPE + ' ' + typeString);
+}
 
+/**
+ * Retrieves the template layout id from the presentation based on the template
+ * name specified on the base template. As the API doesn't offer a direct way to
+ * do this operation, it iterates over all of the existing layouts and it
+ * returns the correct one once it has found a match. This function assumes that
+ * the base template contains the layout name as specified on the constants.
+ *
+ * @param {string} presentationId The ID of the new slide deck that has been
+ *  generated.
+ * @param {string=} layoutName (optional) The name of the layout to match.
+ * @return {string} The ID of the layout matched by the defined name.
+ * @throws {Error} If there is a problem retrieving the slide layout.
+ */
+function getTemplateLayoutId(presentationId, layoutName = null) {
+  const layouts = Slides.Presentations.get(presentationId).layouts;
+  const nameToMatch =
+      layoutName ? layoutName : documentProperties.getProperty('LAYOUT_NAME');
+  for (const layout of layouts) {
+    if (layout.layoutProperties.displayName === nameToMatch) {
+      return layout.objectId;
+    }
+  }
+  throw new Error(`There was a problem retrieving the slide layout, 
+  please check the configuration tab.`);
+}
+
+/**
+ * Retrieves a Layout object based on a template layout name defined on the
+ * properties sheet in the presentation.
+ *
+ * @param {string} presentationId Id of the new slide deck that has
+ *     been generated
+ * @param {string} [layoutName] The name of the template layout to retrieve.
+ * @return {?Layout} Layout object matched by defined name if found or null
+ */
+function getTemplateLayout(presentationId, layoutName = null) {
+  const layouts = SlidesApp.openById(presentationId).getLayouts();
+  const layoutId = getTemplateLayoutId(presentationId, layoutName);
+  for (const layout of layouts) {
+    if (layout.getObjectId() === layoutId) {
+      return layout;
+    }
+  }
+  return null;
+}
+
+/**
+ * Copies a template deck based on the id specified on the configuration sheet.
+ * It creates the deck in the same folder as the recommendations spreadsheet
+ * under the assumption that this will be hosted in the vendor's drive.
+ * Params are specified in document properties for ease of adjustment during
+ * development.
+ *
+ * @return {string} Id of the copied deck
+ */
+function createBaseDeck() {
+  const parentFolder =
+      DriveApp.getFileById(SpreadsheetApp.getActiveSpreadsheet().getId())
+          .getParents()
+          .next();
+  const templateDeck =
+      DriveApp.getFileById(documentProperties.getProperty('TEMPLATE_DECK_ID'));
+  return templateDeck
+      .makeCopy(
+          documentProperties.getProperty('OUTPUT_DECK_NAME'), parentFolder)
+      .getId();
+}
 
 /**
  * Loads the configuration properties based on a named range defined on the
@@ -84,7 +227,7 @@ function loadConfiguration(rangeName = RANGE_NAME) {
  */
 function retrieveImageFromFolder(folder, imageName) {
   const searchQuery = `title contains '${imageName}'
-  and mimeType contains 'image'`;
+and mimeType contains 'image'`;
   const files = folder.searchFiles(searchQuery);
   let file = null;
 
@@ -197,6 +340,27 @@ function shouldCreateCollectionSlide() {
       (subtitleColumn && subtitleColumn.length > 0) ||
       (bodyColumn && bodyColumn.length > 0));
 }
+
+/**
+ * Checks whether the provided ID is a valid presentation ID.
+ *
+ * @param {string} deckId The ID of the presentation to check.
+ * @return {boolean} True if the ID is a valid presentation ID, false
+ *     otherwise.
+ */
+function isPresentationId(deckId) {
+  try {
+    const file = DriveApp.getFileById(deckId);
+    if (file.getMimeType() === 'application/vnd.google-apps.presentation') {
+      return true;
+    } else {
+      return false;
+    }
+  } catch (error) {
+    return false;
+  }
+}
+
 
 /**
  * Appends insight slides by reference to the generated deck
