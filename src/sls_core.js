@@ -79,7 +79,7 @@ function createDeckFromDatasources() {
 
   for (const datasource of datasourcesArray) {
     if (sectionLayout) {
-      createHeaderSlide(deckId, sectionLayout, datasource);
+      createSlideWithTitle(deckId, sectionLayout, datasource);
     }
     prepareDependenciesAndCreateSlides(datasource, newDeckId);
   }
