@@ -15,7 +15,11 @@
  * limitations under the License.
  */
 
-
+/**
+ * @fileoverview Functions related to simplifying interfacing with Sheets or running
+ * operations not supported directly by either the Apps Script or REST API.
+ * This includes getting layouts by name, inserting charts, retrieving shapes, creating decks...
+ */
 
 /**
  * Copies a template deck based on the id specified on the configuration sheet.
@@ -106,9 +110,73 @@ function retrieveShape(slide, typeString) {
 }
 
 /**
+ * Adds text to the specified placeholder on the slide.
+ *
+ * @param {!Slide} slide The slide to add the text to.
+ * @param {!SlidesApp.PlaceholderType} placeholderType The type of placeholder
+ *     to add the text to.
+ * @param {string} text The text to add to the placeholder.
+ * @param {string} defaultValue The default text to add to the placeholder if
+ *     `text` is empty.
+ */
+function addTextToPlaceholder(slide, placeholderType, text, defaultValue) {
+  const placeholder = slide.getPlaceholder(placeholderType).asShape().getText();
+  if (text && text.length > 0) {
+    placeholder.setText(text);
+  } else {
+    placeholder.setText(defaultValue);
+  }
+}
+
+/**
+ * Finds and replaces all placeholder strings within a slide deck. It stops
+ * processing whenever it finds the first empty row within the sheet.
+ * @param {string} newDeckId Id of the new slide deck that has
+ *     been generated
+ */
+//TODO: Refactor name - Something more descriptive "DeckWideTextReplacement"
+function customDataInjection(newDeckId) {
+  const presentation = SlidesApp.openById(newDeckId);
+
+  SpreadsheetApp.getActiveSpreadsheet().toast('Autofilling strings');
+  const sheet = SpreadsheetApp.getActive().getSheetByName(
+      documentProperties.getProperty('DICTIONARY_SHEET_NAME'),
+  );
+
+  const dictionary = sheet.getDataRange().offset(1, 0).getValues();
+
+  for (const row of dictionary) {
+    if (!row[0]) break;
+    presentation.replaceAllText(row[0], row[1]);
+  }
+}
+
+/**
+ * Creates a subsection header slide within a specified deck
+ * and appends it.
+ *
+ * @param {string} deckId Object identifier for the slide deck
+ * @param {!Layout} layout Layout object relative to the header slide
+ * @param {string} title Name of the section of the audit
+ */
+function createSlideWithTitle(deckId, layout, title) {
+  const deck = SlidesApp.openById(deckId);
+  const slide = deck.appendSlide(layout);
+  const titlePlaceholder = slide.getPlaceholder(
+      SlidesApp.PlaceholderType.TITLE,
+  );
+  const titleRange = titlePlaceholder.asShape().getText();
+  titleRange.setText(title);
+}
+
+/**
  * Embed a Sheets chart (indicated by the spreadsheetId and sheetChartId) onto
- *   a page in the presentation. Setting the linking mode as 'LINKED' allows the
- *   chart to be refreshed if the Sheets version is updated.
+ * a page in the presentation. Setting the linking mode as 'LINKED' allows the
+ * chart to be refreshed if the Sheets version is updated.
+ * We don't use the objectId when creating the Sheets chart, but the API
+ * requires it, so we use the value of the current full datetime to ensure there
+ * are no duplicates.
+ *
  * @param {string} presentationId
  * @param {string} spreadsheetId
  * @param {string} sheetChartId
@@ -121,11 +189,11 @@ function replaceSlideShapeWithSheetsChart(
   const chartHeight = slideChartShape.getInherentHeight();
   const chartWidth = slideChartShape.getInherentWidth();
   const chartTransform = slideChartShape.getTransform();
-  const presentationChartId = 'chart-test';
+  const requiredForAPIButUnused = new Date().toDateString();
   const requests = [
     {
       createSheetsChart: {
-        objectId: presentationChartId,
+        objectId: requiredForAPIButUnused,
         spreadsheetId: spreadsheetId,
         chartId: sheetChartId,
         linkingMode: 'LINKED',
@@ -151,69 +219,10 @@ function replaceSlideShapeWithSheetsChart(
   try {
     const batchUpdateResponse =
         Slides.Presentations.batchUpdate({requests: requests}, presentationId);
-    console.log('Added a linked Sheets chart with ID: %s', presentationChartId);
+    console.log('Added a linked Sheets chart with ID: %s', presentationId);
     slideChartShape.remove();
     return batchUpdateResponse;
   } catch (err) {
     console.log('Failed with error: %s', err);
   }
-}
-
-/**
- * Adds text to the specified placeholder on the slide.
- *
- * @param {!Slide} slide The slide to add the text to.
- * @param {!SlidesApp.PlaceholderType} placeholderType The type of placeholder
- *     to add the text to.
- * @param {string} text The text to add to the placeholder.
- * @param {string} defaultValue The default text to add to the placeholder if
- *     `text` is empty.
- */
-function addTextToPlaceholder(slide, placeholderType, text, defaultValue) {
-  const placeholder = slide.getPlaceholder(placeholderType).asShape().getText();
-  if (text && text.length > 0) {
-    placeholder.setText(text);
-  } else {
-    placeholder.setText(defaultValue);
-  }
-}
-
-/**
- * Finds and replaces all placeholder strings within a slide deck. It stops
- * processing whenever it finds the first empty row within the sheet.
- * @param {string} newDeckId Id of the new slide deck that has
- *     been generated
- */
-function customDataInjection(newDeckId) {
-  const presentation = SlidesApp.openById(newDeckId);
-
-  SpreadsheetApp.getActiveSpreadsheet().toast('Autofilling strings');
-  const sheet = SpreadsheetApp.getActive().getSheetByName(
-      documentProperties.getProperty('DICTIONARY_SHEET_NAME'),
-  );
-
-  const dictionary = sheet.getDataRange().offset(1, 0).getValues();
-
-  for (const row of dictionary) {
-    if (!row[0]) break;
-    presentation.replaceAllText(row[0], row[1]);
-  }
-}
-
-/**
- * Creates a subsection header slide within a specified deck
- * and appends it.
- *
- * @param {string} deckId Object identifier for the slide deck
- * @param {!Layout} layout Layout object relative to the header slide
- * @param {string} title Name of the section of the audit
- */
-function createHeaderSlide(deckId, layout, title) {
-  const deck = SlidesApp.openById(deckId);
-  const slide = deck.appendSlide(layout);
-  const titlePlaceholder = slide.getPlaceholder(
-      SlidesApp.PlaceholderType.TITLE,
-  );
-  const titleRange = titlePlaceholder.asShape().getText();
-  titleRange.setText(title);
 }
