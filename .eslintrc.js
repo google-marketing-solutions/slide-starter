@@ -1,5 +1,5 @@
 module.exports = {
-  ignorePatterns: ['test/Core.spec.ts'],
+  ignorePatterns: ['test/Helpers.spec.ts'],
   extends: ['eslint:recommended', 'google'],
   env: {
     browser: true,
