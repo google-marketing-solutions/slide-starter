@@ -62,3 +62,13 @@ function isValidImageUrl(url) {
   // TODO: Fix issue #39 Check if it's an image
   return url.startsWith('http://') || url.startsWith('https://');
 }
+
+
+/**
+ * Below are the exports required for the linter.
+ * This is necessary because AppsScript doesn't support modules.
+ */
+/* exported isBase64Image */
+/* exported decodeBase64Image */
+/* exported getFunctionByName */
+/* exported isValidImageUrl */

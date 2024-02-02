@@ -55,3 +55,9 @@ function filterAndSortData(sheet = undefined) {
             failingFilterCriteria);
   }
 }
+
+/**
+ * Below are the exports required for the linter.
+ * This is necessary because AppsScript doesn't support modules.
+ */
+/* exported filterAndSortData */

@@ -16,12 +16,12 @@
  */
 
 /**
- * @fileoverview Handles loading and retrieving properties 
+ * @fileoverview Handles loading and retrieving properties
  * to use across the project.
  */
 
 /**
- * Constant that encapsulates the access to Document Properties, 
+ * Constant that encapsulates the access to Document Properties,
  * used throughout the project.
  */
 const documentProperties = PropertiesService.getDocumentProperties();
@@ -43,3 +43,9 @@ function loadConfiguration(rangeName = RANGE_NAME) {
     documentProperties.setProperty(value[0], String(value[1]));
   }
 }
+
+/**
+ * Below are the exports required for the linter.
+ * This is necessary because AppsScript doesn't support modules.
+ */
+/* exported loadConfiguration */

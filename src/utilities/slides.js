@@ -16,9 +16,10 @@
  */
 
 /**
- * @fileoverview Functions related to simplifying interfacing with Slides or running
- * operations not supported directly by either the Apps Script or REST API.
- * This includes getting layouts by name, inserting charts, retrieving shapes, creating decks...
+ * @fileoverview Functions related to simplifying interfacing with Slides or
+ * running operations not supported directly by either the Apps Script or REST
+ * API. This includes getting layouts by name, inserting charts, retrieving
+ * shapes, creating decks...
  */
 
 /**
@@ -134,8 +135,8 @@ function addTextToPlaceholder(slide, placeholderType, text, defaultValue) {
  * @param {string} newDeckId Id of the new slide deck that has
  *     been generated
  */
-//TODO: Refactor name - Something more descriptive "DeckWideTextReplacement"
 function customDataInjection(newDeckId) {
+  // TODO: Refactor name - Something more descriptive "DeckWideTextReplacement"
   const presentation = SlidesApp.openById(newDeckId);
 
   SpreadsheetApp.getActiveSpreadsheet().toast('Autofilling strings');
@@ -185,7 +186,7 @@ function createSlideWithTitle(deckId, layout, title) {
  * @return {*}
  */
 function replaceSlideShapeWithSheetsChart(
-  presentationId, spreadsheetId, sheetChartId, slidePageId, slideChartShape) {
+    presentationId, spreadsheetId, sheetChartId, slidePageId, slideChartShape) {
   const chartHeight = slideChartShape.getInherentHeight();
   const chartWidth = slideChartShape.getInherentWidth();
   const chartTransform = slideChartShape.getTransform();
@@ -226,3 +227,16 @@ function replaceSlideShapeWithSheetsChart(
     console.log('Failed with error: %s', err);
   }
 }
+
+
+/**
+ * Below are the exports required for the linter.
+ * This is necessary because AppsScript doesn't support modules.
+ */
+/* exported createBaseDeck */
+/* exported getTemplateLayout */
+/* exported retrieveShape */
+/* exported addTextToPlaceholder */
+/* exported customDataInjection */
+/* exported createSlideWithTitle */
+/* exported replaceSlideShapeWithSheetsChart */

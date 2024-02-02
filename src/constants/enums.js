@@ -65,3 +65,10 @@ const COLORS = {
   RED: '#EA4335', // Poor
   WHITE: '#F8F9FA', // None
 };
+
+/**
+ * Below are the exports required for the linter.
+ * This is necessary because AppsScript doesn't support modules.
+ */
+/* exported colorForCWV */
+/* exported cwvTextType */
