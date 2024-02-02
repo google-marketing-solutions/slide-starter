@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2023 Google LLC
+ * Copyright 2024 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
  */
 
 /**
- * @fileoverview Functions related to simplifying interfacing with Sheets or running
+ * @fileoverview Functions related to simplifying interfacing with Slides or running
  * operations not supported directly by either the Apps Script or REST API.
  * This includes getting layouts by name, inserting charts, retrieving shapes, creating decks...
  */

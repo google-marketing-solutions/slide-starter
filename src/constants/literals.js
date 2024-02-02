@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2023 Google LLC
+ * Copyright 2024 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,3 +31,8 @@ const RANGE_NAME = 'Configuration!PROPERTIES';
 // Warning messages
 const WARNING_NO_IMAGES = 'No image found for criteria id ';
 const WARNING_MULTIPLE_IMAGES = 'No image found for criteria id ';
+
+const ERROR_MISSING_VALUE = 'Please select a non-empty cell.';
+const ERROR_PARENT_FOLDER =
+    'You do not have access to the parent folder of this Sheet.';
+const SUCCESS_UPLOADED = 'File uploaded for: ';

@@ -3,7 +3,7 @@
 
 /**
  * @license
- * Copyright 2023 Google LLC
+ * Copyright 2024 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,35 +29,6 @@
 /* exported customStyledTextFields */
 /* exported applyCustomStyle */
 
-/**
- * Object whose keys represent Core Web Vital metrics and values are Arrays that
- * contain the low & high thresholds for that metric. Used in coloring the table
- * for CrUX CWV data.
- */
-const CWV = {
-  LCP: [2500, 4000],
-  FID: [100, 300],
-  INP: [100, 300],
-  CLS: [0.1, 0.25],
-};
-
-const cwvTextType = {
-  'CRUX_FID': CWV.FID,
-  'CRUX_CLS': CWV.CLS,
-  'CRUX_INP': CWV.INP,
-  'CRUX_LCP': CWV.LCP,
-};
-
-/**
- * Object whose keys are colors and values are arrays of RGB values in decimal.
- * Used in coloring the table for CrUX CWV data.
- */
-const COLORS = {
-  GREEN: '#34A853', // Good
-  YELLOW: '#FBBC04', // Needs Improvement
-  RED: '#EA4335', // Poor
-  WHITE: '#F8F9FA', // None
-};
 
 /**
  * A special function that runs whenever a change on the spreadsheet is detected
@@ -262,7 +233,6 @@ function parseFieldsAndCreateSlideSustainability(
  *     to be used.
  */
 function buildReadinessAnalysis(spreadsheet, values, chartSheetName) {
-  const documentProperties = PropertiesService.getDocumentProperties();
   const policyNamesListString =
       documentProperties.getProperty('CATEGORY_NAMES_LIST');
   const policyNamesList =
