@@ -38,7 +38,7 @@ function check_login () {
 # Function to copy files from the main codebase into the clasp folder
 function copy_files () {
   cp -r ../src/* .
-  rm -r audits
+  rm -r audits/*
   cp ../src/audits/$audit_type.js audits/$audit_type.js
 }
 

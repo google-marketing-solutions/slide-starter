@@ -1,8 +1,3 @@
-/* exported retrieveShape */
-/* exported appendInsightSlides */
-/* exported createDeckFromDatasources */
-/* exported replaceSlideShapeWithSheetsChart*/
-
 /**
  * @license
  * Copyright 2024 Google LLC
@@ -422,3 +417,35 @@ function shouldCreateCollectionSlide() {
       (subtitleColumn && subtitleColumn.length > 0) ||
       (bodyColumn && bodyColumn.length > 0));
 }
+
+/**
+ * Appends insight slides by reference to the generated deck
+ *
+ * @param {!Presentation} deck Reference to the generated deck
+ * @param {!Presentation} insightDeck Reference to the generated deck
+ * @param {!Array<string>} insights Array of slide ids for extended insights
+ */
+function appendInsightSlides(deck, insightDeck, insights) {
+  for (const insightSlideId of insights) {
+    if (insightSlideId === '') {
+      continue;
+    }
+    const insightSlide = insightDeck.getSlideById(insightSlideId.trim());
+    if (insightSlide === null) {
+      continue;
+    }
+    deck.appendSlide(insightSlide, SlidesApp.SlideLinkingMode.NOT_LINKED);
+    if (deck.getMasters().length > 1) {
+      deck.getMasters()[deck.getMasters().length - 1].remove();
+    }
+  }
+}
+
+/**
+ * Below are the exports required for the linter.
+ * This is necessary because AppsScript doesn't support modules.
+ */
+/* exported retrieveShape */
+/* exported appendInsightSlides */
+/* exported createDeckFromDatasources */
+/* exported replaceSlideShapeWithSheetsChart */
