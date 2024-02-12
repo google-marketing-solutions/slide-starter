@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2023 Google LLC
+ * Copyright 2024 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,6 @@ const RESULTS_TAB = 'Performance Results';
 * @return {string} the API Key to use with PSI.
 */
 function getPsiApiKey() {
-  const documentProperties = PropertiesService.getDocumentProperties();
   const key =
   /** @type {string} */ (documentProperties.getProperty('PSI_API_KEY'));
   if (!key.trim()) {
@@ -224,7 +223,6 @@ function parseResults(content, responseMap) {
   ];
 
   // CO2eq measurement integrations behind a flag for backwards compatibility
-  const documentProperties = PropertiesService.getDocumentProperties();
   const shouldIncludeCo2 = documentProperties.getProperty('INCLUDE_CO2EQ');
   if (shouldIncludeCo2) {
     const totalByteWeight =

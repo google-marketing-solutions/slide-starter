@@ -1,11 +1,6 @@
-/* exported retrieveShape */
-/* exported appendInsightSlides */
-/* exported createDeckFromDatasources */
-/* exported replaceSlideShapeWithSheetsChart*/
-
 /**
  * @license
- * Copyright 2023 Google LLC
+ * Copyright 2024 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,10 +44,6 @@
  * 23/05/23
  */
 
-
-// Document properties
-const documentProperties = PropertiesService.getDocumentProperties();
-
 // --- Katalyst loops
 
 /**
@@ -61,7 +52,6 @@ const documentProperties = PropertiesService.getDocumentProperties();
  * styling to the new deck.
  */
 function createDeckFromDatasources() {
-  const documentProperties = PropertiesService.getDocumentProperties();
   loadConfiguration();
 
   const newDeckId = createBaseDeck();
@@ -79,7 +69,7 @@ function createDeckFromDatasources() {
 
   for (const datasource of datasourcesArray) {
     if (sectionLayout) {
-      createHeaderSlide(deckId, sectionLayout, datasource);
+      createSlideWithTitle(deckId, sectionLayout, datasource);
     }
     prepareDependenciesAndCreateSlides(datasource, newDeckId);
   }
@@ -100,7 +90,6 @@ function createDeckFromDatasources() {
  * @param {string} newDeckId The ID of the new deck to create slides in.
  */
 function prepareDependenciesAndCreateSlides(datasource, newDeckId) {
-  const documentProperties = PropertiesService.getDocumentProperties();
   const datasourceConfiguration =
       '\'Configuration_' + datasource + '\'!PROPERTIES';
   loadConfiguration(datasourceConfiguration);
@@ -261,7 +250,7 @@ function createSingleSlide(deck, insightDeck, slideLayout) {
       if (shapeId && range) {
         const imageShape = retrieveShape(slide, shapeId);
         const rawImageValue = spreadsheet.getRange(range).getValue();
-        const imageValue = getImageValue(rawImageValue, column);
+        const imageValue = getImageBlobFromFolder(rawImageValue, column);
         slide.insertImage(
             imageValue, imageShape.getLeft(), imageShape.getTop(),
             imageShape.getWidth(), imageShape.getHeight());
@@ -330,7 +319,7 @@ function parseFieldsAndCreateCollectionSlide(deck, slideLayout, row) {
       const column = imageColumnsArray[i];
       if (shapeId && column) {
         const imageShape = retrieveShape(slide, shapeId);
-        const imageValue = getImageValue(row[column - 1], column);
+        const imageValue = getImageBlobFromFolder(row[column - 1], column);
         slide.insertImage(
             imageValue, imageShape.getLeft(), imageShape.getTop(),
             imageShape.getWidth(), imageShape.getHeight());
@@ -400,8 +389,8 @@ function addInsightSlides(deck, insightDeck, row) {
       let insightSlideIds;
       if (isPresentationId(insights[0])) {
         insightDeckToUse = SlidesApp.openById(insights[0]);
-        insightSlideIds = insightDeckToUse.getSlides()
-            .map((item) => item.getObjectId());
+        insightSlideIds =
+            insightDeckToUse.getSlides().map((item) => item.getObjectId());
       } else {
         insightDeckToUse = insightDeck;
         insightSlideIds = insights;
@@ -410,3 +399,53 @@ function addInsightSlides(deck, insightDeck, row) {
     }
   }
 }
+
+/**
+ * Determines whether the script should create a slide for this row in the
+ * collection based on whether title, subtitle, or body column have been
+ * defined. Only one of them should be in order to create a slide.
+ *
+ * @return {boolean} Whether the script should create a slide for that row in
+ *     the collection
+ */
+function shouldCreateCollectionSlide() {
+  const titleColumn = documentProperties.getProperty('TITLE_COLUMN');
+  const subtitleColumn = documentProperties.getProperty('SUBTITLE_COLUMN');
+  const bodyColumn = documentProperties.getProperty('BODY_COLUMN');
+  return (
+    (titleColumn && titleColumn.length > 0) ||
+      (subtitleColumn && subtitleColumn.length > 0) ||
+      (bodyColumn && bodyColumn.length > 0));
+}
+
+/**
+ * Appends insight slides by reference to the generated deck
+ *
+ * @param {!Presentation} deck Reference to the generated deck
+ * @param {!Presentation} insightDeck Reference to the generated deck
+ * @param {!Array<string>} insights Array of slide ids for extended insights
+ */
+function appendInsightSlides(deck, insightDeck, insights) {
+  for (const insightSlideId of insights) {
+    if (insightSlideId === '') {
+      continue;
+    }
+    const insightSlide = insightDeck.getSlideById(insightSlideId.trim());
+    if (insightSlide === null) {
+      continue;
+    }
+    deck.appendSlide(insightSlide, SlidesApp.SlideLinkingMode.NOT_LINKED);
+    if (deck.getMasters().length > 1) {
+      deck.getMasters()[deck.getMasters().length - 1].remove();
+    }
+  }
+}
+
+/**
+ * Below are the exports required for the linter.
+ * This is necessary because AppsScript doesn't support modules.
+ */
+/* exported retrieveShape */
+/* exported appendInsightSlides */
+/* exported createDeckFromDatasources */
+/* exported replaceSlideShapeWithSheetsChart */

@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2023 Google LLC
+ * Copyright 2024 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,19 +15,34 @@
  * limitations under the License.
  */
 
-/* exported ERROR_MISSING_RANGE */
-/* exported ERROR_NO_SHAPE */
-/* exported RANGE_NAME */
-/* exported WARNING_NO_IMAGES */
-/* exported WARNING_MULTIPLE_IMAGES */
-
 // Error messages
 const ERROR_MISSING_RANGE = 'Couldn\'t find the named range in Configuration.';
 const ERROR_NO_SHAPE = 'There was a problem retrieving the shape layout.';
-
-// Properties configuration
-const RANGE_NAME = 'Configuration!PROPERTIES';
+const ERROR_MISSING_VALUE = 'Please select a non-empty cell.';
+const ERROR_PARENT_FOLDER =
+    'You do not have access to the parent folder of this Sheet.';
 
 // Warning messages
 const WARNING_NO_IMAGES = 'No image found for criteria id ';
 const WARNING_MULTIPLE_IMAGES = 'No image found for criteria id ';
+
+// Success messages
+const SUCCESS_UPLOADED = 'File uploaded for: ';
+
+// Properties configuration
+const RANGE_NAME = 'Configuration!PROPERTIES';
+
+
+/**
+ * Below are the exports required for the linter.
+ * This is necessary because AppsScript doesn't support modules.
+ */
+/* exported ERROR_MISSING_RANGE */
+/* exported ERROR_NO_SHAPE */
+/* exported ERROR_MISSING_VALUE */
+/* exported ERROR_PARENT_FOLDER */
+/* exported RANGE_NAME */
+/* exported WARNING_NO_IMAGES */
+/* exported WARNING_MULTIPLE_IMAGES */
+/* exported SUCCESS_UPLOADED */
+

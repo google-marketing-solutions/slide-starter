@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2023 Google LLC
+ * Copyright 2024 Google LLC
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,14 +19,6 @@
  * @fileoverview Helpful UI elements.
  */
 
-/* exported uploadFile */
-/* exported openUploadDialog */
-/* exported sheetUI */
-
-const ERROR_MISSING_VALUE = 'Please select a non-empty cell.';
-const ERROR_PARENT_FOLDER =
-    'You do not have access to the parent folder of this Sheet.';
-const SUCCESS_UPLOADED = 'File uploaded for: ';
 
 /**
  * Add menu items for helpful UI.
@@ -39,14 +31,14 @@ function sheetUI() {
 }
 
 /**
- * Present HTML file Upload form.
- */
+   * Present HTML file Upload form.
+   */
 function openUploadDialog() {
   const activeCell = SpreadsheetApp.getActiveSheet().getActiveCell();
   if (activeCell && activeCell.getValue() && activeCell.getValue().length > 0) {
     const criteriaName =
-        SpreadsheetApp.getActiveSheet().getRange(activeCell.getRow(), 1);
-    const html = HtmlService.createTemplateFromFile('upload');
+          SpreadsheetApp.getActiveSheet().getRange(activeCell.getRow(), 1);
+    const html = HtmlService.createTemplateFromFile('image_upload');
     html.criteriaName = criteriaName.getValue();
     SpreadsheetApp.getUi()
         .showModalDialog(html.evaluate(), 'Upload File to Images folder');
@@ -58,10 +50,10 @@ function openUploadDialog() {
 }
 
 /**
- * Hand image file upload via a base64 encoded data string.
- * @param {string} data
- * @param {string} type
- */
+   * Hand image file upload via a base64 encoded data string.
+   * @param {string} data
+   * @param {string} type
+   */
 function uploadFile(data, type) {
   const activeCell = SpreadsheetApp.getActiveSheet().getActiveCell();
   const fileName = activeCell.getValue();
@@ -96,3 +88,11 @@ function uploadFile(data, type) {
   SpreadsheetApp.getActiveSpreadsheet()
       .toast(SUCCESS_UPLOADED + fileName);
 }
+
+/**
+ * Below are the exports required for the linter.
+ * This is necessary because AppsScript doesn't support modules.
+ */
+/* exported uploadFile */
+/* exported openUploadDialog */
+/* exported sheetUI */
