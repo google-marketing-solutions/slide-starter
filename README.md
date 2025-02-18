@@ -1,3 +1,7 @@
+> [!CAUTION]
+> This solution has been archived since February 2025.
+> No new development or updates will be performed.
+
 # Slide Starter
 
 Slide Starter is a simple tool that simplifies the process of creating slide decks for mobile website and app audits through Apps Script, leveraging Google Sheets for the analysis.
